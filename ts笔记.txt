@@ -1,0 +1,142 @@
+1.ts中的类型有哪些
+	number，string,boolean 字面量,any,unknown,void（空值）,never（不能是任何值）,object,array,tuple(元组，固定长度数组),enum(枚举)
+	字面量：可以用|连接多个类型，如let b: 'male' | 'female',那么此时b的值就只能是male和female
+	unknown实际上是一个类型安全的any，any类型的变量可以赋值给其他类型变量，把其他变量也改成了any,
+	unknown类型变量没法直接赋值给其他变量
+	void用来表示空值，一般用来设置函数返回值，表示没有返回值，当然你也可以返回undefined或者null
+	never表示永远不会返回结果，比如有一种类型函数，专门用来报错的，这时候就可以设置函数返回值是never
+	
+	
+	object一般很少直接指定一个变量是object类型，可以用{}来指定对象中包含哪些属性
+	如:let b:{name:string}表示b这个变量是一个对象，并且里边必须有一个string类型的name属性
+	在属性后边加？表示该属性是可选的，当然如果向表示可以有任意多的属性，可以 用[propName:string]:any来表示
+	
+	也可以设置函数结构的类型声明，如let b : (a:number,b:string) => number
+	
+	数组类型声明：1.类型[] 2.Array<类型>
+	
+	元组声明：let h:[string,string]
+	
+	enum枚举声明：Enum Gender{   用的地方直接就是Gender.Male
+		Male
+		Female
+	}
+	
+	类型别名：
+		type myType = 1|2|3
+		let a:myType
+		let b:myType
+		let c:myType
+		
+2.ts中的编译选项
+	可以单独编一个文件如tsc aa.ts -w
+	或者可以配置一个配置文件tsconfig.json，然后用tsc来对整个项目进行编译，tsconfig.json是ts编译器的配置文件
+	{
+		“include”:[//用来指定哪些文件需要被编译
+			'./src/**/*'//**表示任意目录，*表示任意文件
+		]
+		“exclude”:[//排除不需要被编译的文件
+			".src/hello/**/*"
+		]
+		“compilerOptions”:{
+			"target": "ES5",//用来指定ts被编译的ES版本
+			“module”: "ES2015",//指定要使用的模块规范
+			“lib”:[]//指定项目中要用到的库，但是一般情况下不改
+			“outDir”:""//指定编译后的文件放哪
+			“outFile”:"./dist/app.js"//可以将v编译后的文件合并到一个文件中
+			"allowJs":false//是否对js文件进行编译
+			“checkJs”:false//是否检查js语法
+			“removeComments”:true//是否移除注释
+			“noEmit”:false//不生成编译后的文件
+			“noEmitOnError”:false//当有错误时不生成编译文件
+			"strict":true//所有严格检查的总开关，一般建议开着
+			“alwaysStrict”:false//用来设置编译后的文件是否使用严格模式
+			“noImplicitAny”:false//不允许隐式的any
+			“noImplicitThis”:false//不允许不明确类型的this
+			“strictNullChecks": false//严格检查空值
+		}
+	}
+	还有很多配置选项就不一个一个记了，需要时可以按照官网配置
+	
+3.用webpack打包ts代码
+	用ts-loader
+	
+	const HTMLWebpackPlugin = requires(html-webpack-plugin)
+	module.exports = {
+		entry:['./src/index.js']
+		output:{
+			path:resolve(__dirname,'dist')
+			filename:'bundle.js'
+		}
+		module:{
+			rules:[
+				{
+					test:/\.ts$/
+					use:'ts-loader'
+					exclude:/node-modules/
+				}
+			]
+		}
+		plugins:[
+			new HTMLWebpackPlugin({
+				template:'./src/index.html'
+			}),//传入一个html模板
+		]
+	
+	}
+	主要就是设计webpack的配置
+	
+4.类
+	
+	类中如果用static修饰一个属性或者一个方法，那么该方法就是类的属性和方法，而不是实例属性或方法
+	
+	抽象类：
+		abstract class Animal
+		抽象类不能直接创建对象，生来就是被继承的
+		抽象类中可以添加抽象方法
+			abstract sayHello():void
+			抽象方法必须被重写
+			
+	接口： 用来定义一个类的结构，应该包含哪些属性和方法
+			接口中属性是没有实际值的，方法为抽象方法
+		Interface myInterface{
+			name:string
+			age:number
+			sayHello():void
+		}
+		定义一个类的时候可以实现一个接口
+		class Myclass implements myInterface{
+			//需要实现接口中定义的属性和方法
+			快捷键：Alt + Shift + Enter
+		}
+		抽象类和接口其实挺相似的，不过在抽象类中可以有实际的方法和属性，但是接口中不能有
+		抽象类是继承，extends接口则是implements
+		
+	属性的封装：一个对象中的属性可以被任意的修改会导致对象中的数据变得非常不安全
+		Ts中可以在属性前加属性修饰符
+		public: 修饰的属性可以在任意地方被修改，默认值
+		private: 私有属性，只能在当前类内部修改
+		protected: 只能在当前类和子类中使用
+		
+		可以通过在类中添加方法使得私有属性可以被外部访问
+		get name(){//属性的getter方法（属性的存取器）
+			return  this._name
+		}
+		set name(val){//属性的setter方法
+			this._name = val
+		}
+		设置完这两个方法后，外界就可以直接用.name的形式获取和设置属性值
+
+5.泛型
+	在定义函数或者类时，如果遇到类型不明确就可以使用泛型
+	function fn<T，K>(a:T,b:K):T{
+		return a 
+	}
+	fn<string,number>('hello',11)//调用时指定泛型
+	限制泛型范围：
+		function fn<T extends Inter>(a:T):number{//表示T必须时Inter的实现类
+			return a.length
+		}
+	类中也可以使用泛型：class myclass<T>{   使用时就是new myclass<string>(‘孙悟空’)
+							name:T
+						}
