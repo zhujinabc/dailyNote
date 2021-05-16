@@ -25,7 +25,31 @@ function quickSort (arr,r,l){
         quickSort(arr, l, right)
     }
 }
-
+function quickSort(arr,left,right){
+    let r = right
+    let l = left
+    let mid = Math.parseInt((r+l)/2)
+    while(l<r){
+        while(arr[l]<arr[mid]){
+            l ++
+        }
+        while(arr[r]>arr[mid]){
+            r --
+        }
+        let temp = arr[r]
+        arr[r] = arr[l]
+        arr[l] = temp
+        if(right<=left){
+            break
+        }
+    }
+    if(r>left){
+        quickSort(arr,left,r)
+    }
+    if(l<right){
+        quickSort(arr,l,right)
+    }
+}
 //深拷贝
 function deepClone(obj){
     let cloneObj = new obj.constructor()
@@ -39,6 +63,16 @@ function deepClone(obj){
     return cloneObj
 }
 
+function deepClone(obj){
+    let cloneObj = new obj.constructor()
+    if(obj === null || typeof obj !== obj) return obj
+    if(obj instanceof Date) return new Date(obj)
+    if(obj instanceof RegExp) return new RegExp(obj)
+    for(let key in obj){
+        cloneObj[key] = deepClone(obj[key])
+    }
+    return cloneObj
+}
 //防抖
 function debounce(fn,delay){
     let timer
@@ -47,6 +81,17 @@ function debounce(fn,delay){
             clearTimeout(timer)
         }
         timer = setTimeout(function(){
+            fn.apply(this,arguments)
+        },delay)
+    }
+}
+function debounce(fn,delay){
+    let timer
+    return function(){
+        if(timer){
+            clearTimeout(timer)
+        }
+        timer = setTimeout(()=>{
             fn.apply(this,arguments)
         },delay)
     }
@@ -63,74 +108,79 @@ function throttle(fn,delay){
         }
     }
 }
+function throttle(fn,delay){
+    let timer
+    return function(){
+        if(!timer){
+            setTimeout(()=>{
+                fn.apply(this,arguments)
+            },delay)
+        }
+    }
+}
 //数组乱序
 function shuffle(arr){
     let len = arr.length
-    while(len > 1){
-        let index = parseInt(Math.random() * m--);
-        [arr[index],arr[m]] = [arr[m],arr[index]];
+    while(len>1){
+        let index = parseInt(Math.random().len--)//定义一个随机index
+        [arr[index],arr[len]] = [arr[len],arr[index]]//将当前index和len下标的元素互换
     }
-    return arr 
+    return arr
 }
 //数组去重
-
-Array.from(new Set(arr))//方法1
-[... new Set(arr)]//方法2
-function rmoveDup(arr){//方法3，建议面试的时候用reduce，装逼用
+Array.from(new Set(arr))
+[...new Set(arr)]
+function removeDup(arr){
     return arr.reduce((pre,cur)=>{
-        if(!pre.includes(cur)){
+        if(!pre.includes(cur))
+        {
             return pre.concat(cur)
         }else{
             return pre
         }
     },[])
 }
-function removeDup(arr){//方法3
-    var result = []
-    var hashMap = {}
-    for(let i = 0; i< arr.length - 1;i++){
-        var temp = arr[i]
-        if(!hashMap[temp]){
+function removeDup(arr){
+    let map = new Map()
+    let result = []
+    for(let i = 0;i<arr.length;i++){
+        if(!map[arr[i]]){
             result.push(arr[i])
-            hashMap[temp] = true
+            map.set(arr[i],true)
         }
     }
-    return result;
+    return result
 }
 
 //实现数组的flat方法
-function flatten(arr){//铺开一层的flat
-    let result = []
-    for(let i = 0;i< arr.length; i++){
-        if(Array.isArray(arr[i])){
-            result = result.concat(flatten(arr[i]))
-        }else{
-            result.push(arr[i])
-        }
-    }
+function flatten(arr,deep){
+    return arr.reduce((pre,cur)=>{
+        return pre.concat(Array.isArray(cur) && deep >=1 ? flatten(cur,deep-1) : cur)
+    },[])
 }
-function flattenByDeep(arr,deep){//展开多层的
-    let result = []
-    for(let i = 0; i<arr.lenght; i++){
-        if(Array.isArray(arr[i]) && deep >=1){
-            result = result.concat(flattenByDeep(arr[i],deep - 1))
-        }else{
-            result.push(arr[i])
-        }
+//实现数组map方法
+Array.prototype.map = function(fn){
+    if(typeof fn !== 'function'){
+        throw new Error(`${fn} is not a function`)
     }
+    let arr = this
+    let result = []
+    for(let i =0;i<arr.length;i++){
+        result.push(fn.call(null,arr[i],i,arr))
+    }
+    return result
 }
-
 //实现数组的fillter方法
-Array.prototype.filter = function(fn,context){
-    if(typeof fn != 'function'){
-        throw new TypeError(`${fn} is not a function`)
+Array.prototype.filter = function(fn){
+    if(typeof fn !== 'function'){
+        throw new Error(`${fn} is not a function`)
     }
-    let arr = this;
-    let reuslt = []
-    for(var i = 0;i < arr.length; i++){
-        let temp= fn.call(context,arr[i],i,arr);
+    let arr = this
+    let result = []
+    for(let i=0;i < arr.length; i++){
+        let temp = fn.call(null, arr[i],i,arr)
         if(temp){
-            result.push(arr[i]);
+            result.push(arr[i])
         }
     }
     return result
@@ -138,50 +188,43 @@ Array.prototype.filter = function(fn,context){
 
 //实现call,apply,bind函数
 Function.prototype.myCall = function(context){ 
-    if(typeof this != 'function'){
-        throw new TypeError('this is not a function')
+    if(typeof this !== 'function'){
+        throw new Error('this is not a function')
     }
-    context.fn = this;
-    var arr = [];
-    for(var i = 1; i< arguments.length; i++){
-        arr.push('argument[' + i + ']')
-    }
-    var result = eval('context.fn(' +arr+ ')');
-    delete context.fn;
-    return result;
+    let context = context || window
+    context.fn = this
+    args = [...arguments].slice(1)
+    let result = context.fn(...args)
+    delete context.fn
+    return result
 }
-Function.prototype.myApply = function(context,arr){ 
-    if(typeof this != 'function'){
-        throw new TypeError('this is not a function')
+Function.prototype.myApply = function(context){ 
+    if(typeof this !== 'function'){
+        throw new Error('this is not a function')
     }
-    context.fn = this;
-    var result= [];
-    if(!arr){
-        result = context.fn()
+    let context = context || window
+    let result
+    context.fn = this
+    if(arguments[1]){
+        result = context.fn(...arguments[1])
     }else{
-        var args = [];
-        for(var i = 1; i< arr.length; i++){
-            args.push('arr[' + i + ']')
-        }
-        result = eval('context.fn(' +args+ ')');
+        result = context.fn()
     }
-    delete context.fn;
-    return result;
+    delete context.fn
+    return result
 }
 Function.prototype.myBind = function(context){
-    if(typeof this != 'function'){
-        throw new TypeError('this is not a function')
+    if(typeof this !== 'function'){
+        throw new Error('this is not a funtion')
     }
-    var self = this;
-    var args = Array.prototype.slice.call(arguments,1);
-    var F = function(){};
-    F.prototype = this.prototype;
-    var bound = function(){
-        var bindArgs = Array.prototype.slice.call(arguments);
-        return self.apply(this instanceof F ? this: context, args.concat(bindArgs))
-    };
-    bound.prototype = new F();
-    return bound;
+    let _this = this
+    let args = [...arguments].slice(1)
+    return function F(){
+        if(this instanceof F){// 因为返回了⼀个函数，我们可以 new F()，所以需要判断
+            return new _this(...args,...arguments)
+        }
+        return _this.call(context,...args,...arguments)
+    }
 }
 
 //实现继承
@@ -254,19 +297,18 @@ class EventEmitter {
 
 //实现instanceof
 function myInstanceof(left,right){
-    let proto = left.__proto__;
-    let protoType = right.prototype
+    let proto = left.__proto__;//左边是实例因此是__proto__
+    let protoType = right.prototype//右边是构造函数因此是prototyp
     while(true){
-        if(proto === null){
-            return false
-        }
         if(proto === protoType){
             return true
+        }
+        if(proto === null){
+            return false
         }
         proto = proto.__proto__
     }
 }
-
 //new一个对象的过程
 // 当我们new一个对象的时候，具体执行的是什么？MDN上给的说明如下：
 // 创建一个空的简单 JavaScript 对象（即{}）；
@@ -280,6 +322,12 @@ function newParent(){
     return typeof(result) == 'object' ?  result : obj
 }
 
+function newParent(){
+    let obj = {}
+    obj.__proto__ = Parent.prototype
+    var result = Parent.call(obj)
+    return typeof result === 'object' ? result : obj
+}
 //实现jsonp
 function jsonp(obj) {
     const {url,data} = obj;
@@ -310,23 +358,146 @@ function data2Url(data) {
 }
 
 //实现一个sleep函数
-function sleep(time) {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve(true);
-        }, time*1000);
-    });
+function sleep(delay){
+    return new Promise((resolve,reject)=>{
+        setTimeout(()=>{resolve(true)},delay*1000)
+    })
 }
 //实现promise.all
-//实现promise.retry
-//将一个同步回调封装成一个promise
-function promisify(fn,context){
-    return (...args) => {
-      return new Promise((resolve,reject) => {
-          fn.apply(context,[...args,(err,res) => {
-              return err ? reject(err) : resolve(res)
-          }])
-      })
+Promise.prototype.all = function(promiseArr){
+    if(promiseArr[Symbol.iterator] === undefined){
+        throw new Error('promiseArr must be iteratorable')
     }
-  }
+    return new Promise((resolve,reject)=>{
+        let result = []//定义一个空数组接受结果
+        let count = 0//定义一个count表示当前执行的数量
+        promiseArr.forEach((item,index)=>{
+            Promise.resolve(item).then((val)=>{
+                result[index] = val
+                count++
+                if(count === promiseArr.length){
+                    resolve(result)
+                }
+            },(err)=>{
+                reject(err)
+            })
+        })
+    })
+}
+//实现promise.allSettled
+Promise.prototype.allSettled = function(promiseArr){
+    if(promiseArr[Symbol.iterator] === undefined){
+        throw new Error('promiseArr must be iteratorable')
+    }
+    return new Promise((resolve,reject)=>{
+        let result = []
+        let count = 0
+        promiseArr.forEach((item,index)=>{
+            Promise.resolve(item).then((val)=>{
+                count++
+                result[index] = val
+                if(count === promiseArr.length){
+                    resolve(result)
+                }
+            },(err)=>{
+                count++
+                result[index] = err
+                if(count === promiseArr.length){
+                    resolve(result)
+                }
+            })
+        })
+    })
+}
+//实现Promise.race
+Promise.prototype.race = function(promiseArr){
+    if(promiseArr[Symbol.iterator] === undefined){
+        throw new Error('promiseArr must be iteratorable')
+    }
+    return new Promise((resolve,reject)=>{
+        promiseArr.forEach((item,index)=>{
+            Promise.resolve(item).then((val)=>{
+                resolve(val)
+            },(err)=>{
+                reject(err)
+            })
+        })
+    })
+}
+//实现promise.retry
+Promise.prototype.retry = function(promise,times,delay){
+    return new Promise((resolve,reject)=>{
+        let action = function(){//定义一个函数执行穿进来的promise，如果失败就继续重试该函数，直到没有次数
+            Promise.resolve(promise).then((val)=>{
+                resolve(val)
+            },(err)=>{
+                if(times === 0){
+                    reject(err)
+                }else{
+                    times--
+                    setTimeout(()=>{
+                        action()
+                    },delay)
+                }
+            })
+        }
+        action()
+    })
+}
+//将一个同步回调封装成一个promise
+functiom promisify(fn){
+    return (...args)=>{//该函数返回的应该是一个函数，而该返回的函数返回的是一个promise
+        return new Promise((resolve,reject)=>{
+            fn.apply(this,[...args,(err,res) => {
+                return err ? reject(err) : resolve(res)
+            }])
+        })
+    }
+}
+//实现函数柯里化
+const curry = (fn, ...args1) => (...args2) => (
+    arg => arg.length === fn.length ? fn(...arg) : curry(fn, ...arg)
+   )([...args1, ...args2]);
 
+function curry(fn, args) {
+    var length = fn.length;
+    var args = args || [];
+    return function(){
+        newArgs = args.concat(...arguments);
+        if (newArgs.length < length) {
+            return curry.call(this,fn,newArgs);
+        }else{
+            return fn.apply(this,newArgs);
+        }
+    }
+}
+   // 调用
+   const foo = (a, b, c) => a * b * c;
+   curry(foo)(2, 3, 4); // -> 24
+   curry(foo, 2)(3, 4); // -> 24
+   curry(foo, 2, 3)(4); // -> 24
+   curry(foo, 2, 3, 4)(); // -> 24
+//实现一个并发请求控制函数，限制并发数
+function createRequest(tasks=[],pool){
+    pool = pool || 5; //限制并发的数量
+    let results = [];
+    let running = 0; // 当前运行个数
+    let resultsLength = tasks.length; // 用来判断最后的是否全部成功
+    return new Promise((resolve,reject)=>{
+        run();
+        function run(){
+            while(running < pool && tasks.length){ // 这个wile循环保证 一直有pool个请求在进行
+            running++;
+            let task = tasks.shift();
+            task().then(result => {
+                results.push(result);
+            }).finally(()=>{
+                running--;
+                run();
+            })
+            }
+            if(results.length === resultsLength) { // 全部执行结束
+                resolve(results);
+            }
+        }
+    })}
