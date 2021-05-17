@@ -501,3 +501,23 @@ function createRequest(tasks=[],pool){
             }
         }
     })}
+
+//实现一个函数add(3)(4)(5)(6)(7)(8);
+var add = function (m) {
+ 
+    var temp = function (n) {
+        return add(m + n);
+    }
+ 
+    temp.toString = function () {
+        return m;
+    }
+ 
+    return temp;
+};
+//但代码量极其少而精，重点技术在于：作用域、交替、匿名函数、toString的巧妙。
+// 执行temp(5)，这个函数内执行add(m+n)，n是此次传进来的数值5，m值还是上一步中的7，
+// 所以add(m+n)=add(7+5)=add(12)，此时m=12，并且返回temp函数
+// 4、关键性一步来了，后面没有传入参数，等于返回的temp函数不被执行而是打印，
+// 了解JS的朋友都知道对象的toString是修改对象转换字符串的方法，
+// 因此代码中temp函数的toString函数return m值，而m值是最后一步执行函数时的值m=12，所以返回值是12。
