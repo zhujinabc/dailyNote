@@ -364,7 +364,7 @@ function sleep(delay){
     })
 }
 //实现promise.all
-Promise.prototype.all = function(promiseArr){
+Promise.all = function(promiseArr){
     if(promiseArr[Symbol.iterator] === undefined){
         throw new Error('promiseArr must be iteratorable')
     }
@@ -385,7 +385,7 @@ Promise.prototype.all = function(promiseArr){
     })
 }
 //实现promise.allSettled
-Promise.prototype.allSettled = function(promiseArr){
+Promise.allSettled = function(promiseArr){
     if(promiseArr[Symbol.iterator] === undefined){
         throw new Error('promiseArr must be iteratorable')
     }
@@ -410,7 +410,7 @@ Promise.prototype.allSettled = function(promiseArr){
     })
 }
 //实现Promise.race
-Promise.prototype.race = function(promiseArr){
+Promise.race = function(promiseArr){
     if(promiseArr[Symbol.iterator] === undefined){
         throw new Error('promiseArr must be iteratorable')
     }
@@ -425,7 +425,7 @@ Promise.prototype.race = function(promiseArr){
     })
 }
 //实现promise.retry
-Promise.prototype.retry = function(promise,times,delay){
+Promise.retry = function(promise,times,delay){
     return new Promise((resolve,reject)=>{
         let action = function(){//定义一个函数执行穿进来的promise，如果失败就继续重试该函数，直到没有次数
             Promise.resolve(promise).then((val)=>{
@@ -521,3 +521,64 @@ var add = function (m) {
 // 4、关键性一步来了，后面没有传入参数，等于返回的temp函数不被执行而是打印，
 // 了解JS的朋友都知道对象的toString是修改对象转换字符串的方法，
 // 因此代码中temp函数的toString函数return m值，而m值是最后一步执行函数时的值m=12，所以返回值是12。
+
+//手写一个compose函数
+function compose(...fns){
+    return x =>{
+        return fns.reduceRight((arg,fn) =>{
+            return fn(arg);
+        },x)
+    }
+}
+// compose(f,g)(x) === f(g(x))
+// compose(f,g,m)(x) === f(g(m(x)))
+// compose(f,g,m)(x) === f(g(m(x)))
+// compose(f,g,m,n)(x) === f(g(m(n(x))))
+
+//判断一个元素是否在可视区域内
+//通过getBoundingClientRect方法判断
+// getBoundingClientRect 方法返回的是一个DOMRect对象
+// DOMRect 对象包含了一组用于描述边框的只读属性left、top、right、bottom、x、y以及width、height，单位为像素
+var isTopInWindow = 0 < top && top < windowHeight;
+
+var isBottomInWindow = 0 < bottom && bottom <= windowHeight;
+//数字转换为千分位的方法
+//方法一（正则）?=n	匹配任何其后紧接指定字符串 n 的字符串。
+//零宽断言正如它的名字一样，是一种零宽度的匹配，
+//它匹配到的内容不会保存到匹配结果中去，最终匹配结果只是一个位置而已。
+str.replace(/\d{1,3}(?=(\d{3})+$)/g,function(s){
+    return s+','
+})
+
+//实现堆排序
+// 交换两个节点
+function swap(A, i, j) {
+    let temp = A[i];
+    A[i] = A[j];
+    A[j] = temp; 
+  }
+  function shiftDown(A, i, length) {
+    let temp = A[i]; // 当前父节点// j<length 的目的是对结点 i 以下的结点全部做顺序调整
+    for(let j = 2*i+1; j<length; j = 2*j+1) {
+      temp = A[i];  // 将 A[i] 取出，整个过程相当于找到 A[i] 应处于的位置
+      if(j+1 < length && A[j] < A[j+1]) { 
+        j++;   // 找到两个孩子中较大的一个，再与父节点比较
+      }
+      if(temp < A[j]) {
+        swap(A, i, j) // 如果父节点小于子节点:交换；否则跳出
+        i = j;  // 交换后，temp 的下标变为 j
+      } else {
+        break;
+      }
+    }
+  }// 堆排序
+  function heapSort(A) {// 初始化大顶堆，从第一个非叶子结点开始
+    for(let i = Math.floor(A.length/2-1); i>=0; i--) {
+      shiftDown(A, i, A.length);
+    }// 排序，每一次for循环找出一个当前最大值，数组长度减一
+    for(let i = Math.floor(A.length-1); i>0; i--) {
+      swap(A, 0, i); // 根节点与最后一个节点交换
+      shiftDown(A, 0, i);} // 从根节点开始调整，并且最后一个结点已经为当
+    }                         // 前最大值，不需要再参与比较，所以第三个参数
+                           // 为 i，即比较到最后一个结点前一个即可
+  
