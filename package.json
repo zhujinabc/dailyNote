@@ -1,0 +1,22 @@
+{
+  "name": "dailynote",
+  "version": "1.0.0",
+  "description": "安装react,看源码",
+  "main": "test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhujinabc/dailyNote.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zhujinabc/dailyNote/issues"
+  },
+  "homepage": "https://github.com/zhujinabc/dailyNote#readme",
+  "dependencies": {
+    "react": "^17.0.2"
+  }
+}
