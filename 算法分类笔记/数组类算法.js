@@ -200,5 +200,28 @@ var threeSum = function(nums) {
     }
     return res
 };
-//10.接雨水
+//10.接雨水（hard）
 //给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
+//思路：采用双指针的方法，维护r和l两个指针，以及两个变量rmax和lmax代表右边和左边最高的值，接雨水的量由矮的一边决定
+/**
+ * @param {number[]} height
+ * @return {number}
+ */
+ var trap = function(height) {
+    //采用双指针的方法
+    let l = 0, r = height.length - 1
+    let lmax = 0, rmax = 0
+    let sum = 0
+    while(l< r){
+        lmax = Math.max(lmax, height[l])
+        rmax = Math.max(rmax, height[r])
+        if(lmax < rmax){
+            sum += lmax - height[l]
+            l++
+        }else{
+            sum += rmax - height[r]
+            r--
+        }
+    }
+    return sum
+};

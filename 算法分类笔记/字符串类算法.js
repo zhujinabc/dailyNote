@@ -60,3 +60,24 @@
 	}
 	return res;//别忘了加上 满足重复字符的索引大于左指针（&& map.get(s[r]) >= l） 这个附加条件，不然就会出错。比如 abbcdea这个 case，在遍历到最后一个字符 a 的时候，如果没有加上这个条件，最后一个 a 也会被认为是重复字符，从而产生错误。
 };
+//4.大数相加
+function add(a ,b){
+    //取两个数字的最大长度
+    let maxLength = Math.max(a.length, b.length);
+    //用0去补齐长度
+    a = a.padStart(maxLength , 0);//"0009007199254740991"
+    b = b.padStart(maxLength , 0);//"1234567899999999999"
+    //定义加法过程中需要用到的变量
+    let t = 0;
+    let f = 0;   //"进位"
+    let sum = "";
+    for(let i=maxLength-1 ; i>=0 ; i--){
+       t = parseInt(a[i]) + parseInt(b[i]) + f;
+       f = Math.floor(t/10);
+       sum = t%10 + sum;
+    }
+    if(f == 1){
+       sum = "1" + sum;
+    }
+    return sum;
+ }
