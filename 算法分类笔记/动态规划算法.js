@@ -34,3 +34,17 @@
     }
     return Math.max(...dp)
 };
+//3. 最大子序和
+//给定一个整数数组 `nums` ，找到一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+//最后一步：子序列的和 = 当前值 + 前边子序列的和
+//状态方程：sum = max{sum + a[i], a[i]} 如果前边子序列的和加上当前值还没当前值大，那么最大和只会从当前值开始算
+var maxSubArray = function(nums){
+    let sum = nums[0]
+    let dp = []
+    dp[0] = nums[0]
+    for(let i =1;i<nums.length; i++){
+        dp[i] = Math.max(nums[i], dp[i-1] + nums[i])
+        sum = Math.max(sum, dp[i])
+    }
+    return sum
+}

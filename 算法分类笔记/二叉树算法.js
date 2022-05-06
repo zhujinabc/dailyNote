@@ -103,3 +103,62 @@ var invertTree = function(root) {
   }
   return  traversal(root)
 }
+
+//1.二叉树的最近公共祖先
+//给定一个二叉树, 找到该树中两个指定节点的最近公共祖先
+/**
+ * @param {TreeNode} root
+ * @param {TreeNode} p
+ * @param {TreeNode} q
+ * @return {TreeNode}
+ */
+ var lowestCommonAncestor = function(root, p, q) {
+    //采用回溯的方法
+    //递归终止条件
+    if(root == null || root == q || root == p){
+        return root
+    }
+    const left = lowestCommonAncestor(root.left, p,q)
+    const right = lowestCommonAncestor(root.right, p, q)
+    if(left && right){//如果左边和右边都有值说明当前节点是最近的公共节点
+        return root
+    }else{ //不然就那边节点有值返回哪边节点，继续回溯
+        return left || right
+    }
+
+};
+//2.路径总和
+//给定一个二叉树和一个目标和，判断该树中是否存在根节点到叶子节点的路径，这条路径上所有节点值相加等于目标和。
+/**
+ * @param {TreeNode} root
+ * @param {number} targetSum
+ * @return {boolean}
+ */
+ var hasPathSum = function(root, targetSum) {//递归需要返回值，不用遍历整颗树
+    if(root == null) return false
+    if(!root.left && !root.right && targetSum == root.val) return true //如果当前是叶子节点，并且val和targetSum相等，说明该路径总和是等于targetSum的
+    return hasPathSum(root.left, targetSum - root.val) || hasPathSum(root.right, targetSum - root.val)
+};
+//3.路径总和二
+//给你二叉树的根节点 root 和一个整数目标和 targetSum ，找出所有 从根节点到叶子节点 路径总和等于给定目标和的路径。
+/**
+ * @param {TreeNode} root
+ * @param {number} targetSum
+ * @return {number[][]}
+ */
+ var pathSum = function(root, targetSum) {//递归不需要返回值，遍历整颗数
+    const res = []
+    const dfs = (root, targetSum, path) => {
+        if(root == null) return //递归终止条件
+        if(!root.left && !root.right && targetSum == root.val){//遇到满足条件的叶子节点
+            res.push([...path, root.val])
+            return
+        }
+        path.push(root.val)//选择
+        dfs(root.left, targetSum - root.val, path)//左递归
+        dfs(root.right, targetSum - root.val, path)//右递归
+        path.pop()//回溯
+    }
+    dfs(root,targetSum,[])
+    return res
+};
