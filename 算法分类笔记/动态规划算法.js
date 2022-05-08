@@ -48,3 +48,22 @@ var maxSubArray = function(nums){
     }
     return sum
 }
+//4.不同的二叉搜索树
+//给你一个整数 n ，求恰由 n 个节点组成且节点值从 1 到 n 互不相同的 二叉搜索树 有多少种？返回满足题意的二叉搜索树的种数。
+//思路：采用动态规划来写
+//j相当于是头结点的元素，从1遍历到i为止。所以递推公式：dp[i] += dp[j - 1] * dp[i - j]; ，j-1 为j为头结点左子树节点数量，i-j 为以j为头结点右子树节点数量
+/**
+ * @param {number} n
+ * @return {number}
+ */
+ var numTrees = function(n) {
+    const dp = new Array(n + 1).fill(0)//n+1的原因是0也算，所以如果n是5的话，数组长度应该是6
+    dp[0] = 1//空节点定义上说也是一颗二叉树
+    dp[1] = 1
+    for(let i=2; i<= n; i++){
+        for(let j= 1; j<= i; j++){
+            dp[i] += dp[j-1]*dp[i-j]
+        }
+    }
+    return dp[n]
+};
