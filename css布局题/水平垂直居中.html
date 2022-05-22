@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* 用position绝对定位 */
+        .father{
+            width: 300px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: cornsilk;
+        }
+        /* 可不定宽高 */
+        /* .son1{
+            width: 50px;
+            height: 90px;
+            position: absolute;
+            top:50%;
+            left:50%;
+            transform: translate(-50%, -50%);
+            background-color: chocolate;
+        } */
+        /* 定宽高 */
+        /* .son1{
+            width: 50px;
+            height: 90px;
+            position: absolute;
+            top:50%;
+            left:50%;
+            margin-left:-25px;
+            margin-top:-45px
+            background-color: chocolate;
+        } */
+        /* 定宽高(子元素所有方向都为 0 ，将 margin  设置为 auto ，由于宽高固定，对应方向实现平分，该方法必须盒子有宽高。) */
+        /* .son1{
+            width: 50px;
+            height: 90px;
+            position: absolute;
+            top:0;
+            left:0;
+            bottom: 0;
+            right: 0;
+            margin: auto;
+            background-color: chocolate;
+        } */
+        /* 用flex */
+        .son1{
+            width: 100px;
+            height: 50px;
+            background-color: chocolate;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="father">
+        <div class="son1"></div>
+    </div>
+</body>
+</html>

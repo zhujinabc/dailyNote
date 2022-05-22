@@ -367,6 +367,21 @@ var isSameTree = function(p, q) {
     let right = maxDepth(root.right)
     return Math.max(left, right) + 1 //左右子树中深度大的加1
 };
+//13.二叉树的最小深度
+/**
+ * @param {TreeNode} root
+ * @return {number}
+ */
+ var minDepth = function(root) {
+    if(root == null){//遍历到叶子节点的下级，此时深度为0
+        return 0
+    }
+    // 只有右节点时 递归右节点 因为是最小深度，所以要区分只有左子树和只有右子树的情况
+    if(!root.left) return 1 + minDepth(root.right);
+    // 只有左节点时 递归左节点
+    if(!root.right) return 1 + minDepth(root.left);
+    return Math.min(minDepth(root.left), minDepth(root.right)) + 1;
+};
 //13.从前序与中序遍历序列构造二叉树
 //给定两个整数数组 preorder 和 inorder ，其中 preorder 是二叉树的先序遍历， inorder 是同一棵树的中序遍历，请构造二叉树并返回其根节点。
 //思路：切割代码

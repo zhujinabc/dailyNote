@@ -50,3 +50,22 @@ var findContentChildren = function(g, s) {
     } 
     return result
 };
+//4. 用最少数量的箭引爆气球
+//思路：第一组重叠气球，一定是需要一个箭，气球3，的左边界大于了 第一组重叠气球的最小右边界，所以再需要一支箭来射气球3了
+/**
+ * @param {number[][]} points
+ * @return {number}
+ */
+ var findMinArrowShots = function(points) {
+    if(!points.length) return 0
+    points.sort((a,b)=>a[0]-b[0])//先将数组按照左边界升序排序
+    let res = 1
+    for(let i=1; i<points.length; i++){
+        if(points[i][0] > points[i-1][1]){//如果第二个气球的左边界大于第一个气球右边界，那么需要多一个箭
+            res ++ 
+        }else{
+            points[i][1] = Math.min(points[i][1], points[i-1][1])//重叠的气球，更新下右边界的最小值
+        }
+    }
+    return res
+};

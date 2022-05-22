@@ -225,3 +225,46 @@ var threeSum = function(nums) {
     }
     return sum
 };
+//11. 数组中的第K个最大元素
+//给定整数数组 nums 和整数 k，请返回数组中第 k 个最大的元素
+/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {number}
+ */
+ var findKthLargest = function(nums, k) {
+    return nums.sort((a,b) => b-a)[k - 1]
+};
+//12.在排序数组中查找元素的第一个和最后一个位置
+//给定一个按照升序排列的整数数组 nums，和一个目标值 target。找出给定目标值在数组中的开始位置和结束位置。
+//用二分法查找
+/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number[]}
+ */
+ var searchRange = function(nums, target) {
+    let left = 0, right = nums.length - 1
+    let flag
+    while(left <= right){
+        let mid = Math.floor((left + right) /2)
+        if(target == nums[mid]){
+            flag = mid
+            break
+        }
+        if(target < nums[mid]){
+            right = mid - 1
+        }else{
+            left = mid + 1
+        }
+    }
+    if(left > right) return [-1,-1]
+    let r = l = flag
+    while(nums[r] == nums[r + 1]){
+        r ++
+    }
+    while(nums[l] == nums[l - 1]){
+        l --
+    }
+    return [l,r]
+};

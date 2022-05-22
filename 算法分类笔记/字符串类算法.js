@@ -81,3 +81,21 @@ function add(a ,b){
     }
     return sum;
  }
+ //5.判断子序列
+ //给定字符串 s 和 t ，判断 s 是否为 t 的子序列。
+ //思路：采用双指针遍历两个字符串
+ /**
+ * @param {string} s
+ * @param {string} t
+ * @return {boolean}
+ */
+var isSubsequence = function(s, t) {
+    let i = 0, j=0
+    while(i<s.length && j<t.length){
+        if(s[i] == t[j]){
+            i++
+        }
+        j++
+    }
+    return i == s.length
+};

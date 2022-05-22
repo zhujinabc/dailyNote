@@ -581,4 +581,13 @@ function swap(A, i, j) {
       shiftDown(A, 0, i);} // 从根节点开始调整，并且最后一个结点已经为当
     }                         // 前最大值，不需要再参与比较，所以第三个参数
                            // 为 i，即比较到最后一个结点前一个即可
+
+//如何解决0.1+0.2不等于0.3的问题
+//可以转为整数求解
+function aa (num1, num2){
+    const len1 = (num1.toString().split('.')[1] || '').length
+    const len2 = (num2.toString().split('.')[1] || '').length
+    const baseNum = Math.pow(10, Math.max(len1, len2))
+    return (num1*baseNum + num2*baseNum)/baseNum
+}
   
