@@ -312,7 +312,7 @@ const maxProfit = function (prices) {
     }
     return Math.max(...dp)
 };
-//打家劫舍2
+//16.打家劫舍2
 //树形dp
 //返回数组就是dp数组。所以dp数组（dp table）以及下标的含义：下标为0记录不偷该节点所得到的的最大金钱，下标为1记录偷该节点所得到的的最大金钱
 /**
