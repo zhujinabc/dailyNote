@@ -591,3 +591,8 @@ function aa (num1, num2){
     return (num1*baseNum + num2*baseNum)/baseNum
 }
   
+//实现模板语法
+
+//实现解析csv的函数
+
+//实现LRU缓存

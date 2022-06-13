@@ -99,3 +99,26 @@ var isSubsequence = function(s, t) {
     }
     return i == s.length
 };
+//6.实现一个正则表达式（hard）
+//给你一个字符串 s 和一个字符规律 p，请你来实现一个支持 '.' 和 '*' 的正则表达式匹配。
+// '.' 匹配任意单个字符
+// '*' 匹配零个或多个前面的那一个元素
+// 所谓匹配，是要涵盖 整个 字符串 s的，而不是部分字符串。
+/**
+ * @param {string} s
+ * @param {string} p
+ * @return {boolean}
+ */
+ var isMatch = function (s, p) {
+    const n = s.length, m = p.length;
+    function dfs(i, j) {
+        if (i === n && j === m) return true;//如果匹配到最后都相等，那就返回true
+        if (i > n || j >= m) return false;//如果i或者j超出了字符长度，说明没匹配上返回false
+        const isSame = p[j] === '.' || s[i] === p[j];//比较第一个字符是否相等'.'匹配任意字符
+        if (p[j + 1] === '*') return isSame &&dfs(i + 1, j) || dfs(i, j + 2);//如果下一个字符有模式*，分两种情况
+        //第一种情况：s*匹配0个字符
+      //第二种情况：s*匹配1个字符，递归下去，用来表示s*匹配多个s*
+        return isSame && dfs(i + 1, j + 1);
+    }
+    return dfs(0, 0);
+};

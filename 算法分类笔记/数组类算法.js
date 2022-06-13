@@ -268,3 +268,27 @@ var threeSum = function(nums) {
     }
     return [l,r]
 };
+//13.颜色分类
+//给定一个包含红色、白色和蓝色、共 n 个元素的数组 nums ，原地对它们进行排序，使得相同颜色的元素相邻，并按照红色、白色、蓝色顺序排列。
+//我们使用整数 0、 1 和 2 分别表示红色、白色和蓝色。
+//思路：采用双指针，p0和p1代表头和尾，cur代表当前元素，如果当前元素等于0，将当前元素和头指针交换，如果当前元素等于2和尾指针交换，判断条件是cur要小于等于尾指针p1
+var sortColors = function(nums) {
+    let len = nums.length, cur = 0, p0 = 0, p1 = len -1
+    while(cur <= p1){
+        function swap(a,b){
+            let temp = nums[a]
+            nums[a] = nums[b]
+            nums[b] = temp
+        }
+        if(nums[cur] === 0){
+            swap(cur, p0)
+            cur ++
+            p0 ++
+        }else if(nums[cur] === 2){
+            swap(cur, p1)
+            p1 --
+        }else{
+            cur ++
+        }
+    }
+};
