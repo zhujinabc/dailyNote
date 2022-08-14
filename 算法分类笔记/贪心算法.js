@@ -69,3 +69,16 @@ var findContentChildren = function(g, s) {
     }
     return res
 };
+// 5.整数拆分和剪绳子都可以用贪心来写
+//数字拆分为更多的 33，其次为 22，最差为 11，可让乘积最大化。
+//但是，若最终拆出来，剩下一个 11，我们将其中一个 3 + 13+1 ，组成一个 44，可让乘积更大化。
+var integerBreak = function(n) {
+    if (n <= 3) return n - 1;
+
+    let res = 1;
+    while (n > 4) {
+        n -= 3;
+        res = (res * 3);
+    }
+    return (n * res);
+};

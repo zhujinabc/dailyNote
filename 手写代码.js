@@ -592,6 +592,15 @@ function aa (num1, num2){
 }
   
 //实现模板语法
+function render(template, data){
+    const reg = /\{\{(\w+)\}\}/ //模板字符串正则
+    if(reg.test(template)){ //判断模板里是否还有模板字符串
+        const name = reg.exec(template)[1] // 查找当前模板里第一个模板字符串字段
+        template = template.replace(reg, data[name]) // 将第一个模板字符串渲染
+        return render(template, data)
+    }
+    return template
+}
 
 //实现解析csv的函数
 
@@ -637,3 +646,85 @@ LRUCache.prototype.put = function(key, value) {
     }
 
 };
+
+//实现虚拟dom到真实dom的转变
+
+class Element{
+    constructor(tagName, props, children){
+        this.tagName = tagName,
+        this.props = props
+        this.children = children
+    }
+    render(){
+        let el = document.createElement(this.tagName)
+        let props = this.props
+        for(let propsName of props){
+            el.setAttribute(propsName, props[propsName])
+        }
+        let children = this.children || []
+        children.forEach(item => {
+            let childEl
+            if(item instanceof Element){
+                childEl = this.render(item)
+            }else{
+                childEl = document.createTextNode(item)
+            }
+            el.appendChild(childEl)
+        })
+        return el
+    }
+}
+
+// 实现一个Task类，实现链式调用，log打印，wait等待n秒后执行
+// Const task = new Task();
+// Task.log(1)
+// .log(2)
+// .wait(3)
+// .log(4)
+// .wait(2)
+// .log(6)
+//todo
+class Task {
+    constructor(name){
+        this.tasks = []
+        this.tasks.push(()=>{
+            console.log(name)
+            this.next()
+        })
+        setTimeout(()=>{
+            this.next()
+        },0)
+    }
+    firstSleep(timer){
+        console.log('first sleep')
+        this.tasks.unshift(()=>{
+            setTimeout(()=>{
+                console.log('first sleep')
+                this.next()
+            },timer * 1000)
+        })
+        return this
+    }
+    sleep(timer){
+        console.log('sleep')
+        this.tasks.push(()=>{
+            setTimeout(()=>{
+                console.log('sleep')
+                this.next()
+            },timer * 1000)
+        })
+        return this
+    }
+    eat(){
+        this.tasks.push(()=>{
+            console.log('dinner')
+            this.next()
+        })
+        return this
+    }
+    next(){
+        let fn = this.tasks.shift()//每次从队头取出任务执行
+        fn && fn()
+    }
+
+}
