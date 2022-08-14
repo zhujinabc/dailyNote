@@ -675,14 +675,7 @@ class Element{
     }
 }
 
-// 实现一个Task类，实现链式调用，log打印，wait等待n秒后执行
-// Const task = new Task();
-// Task.log(1)
-// .log(2)
-// .wait(3)
-// .log(4)
-// .wait(2)
-// .log(6)
+//实现一个task类，new Task('test').firstSleep(3).sleep(5).eat('dinner')
 //todo
 class Task {
     constructor(name){
@@ -696,7 +689,6 @@ class Task {
         },0)
     }
     firstSleep(timer){
-        console.log('first sleep')
         this.tasks.unshift(()=>{
             setTimeout(()=>{
                 console.log('first sleep')
@@ -706,7 +698,6 @@ class Task {
         return this
     }
     sleep(timer){
-        console.log('sleep')
         this.tasks.push(()=>{
             setTimeout(()=>{
                 console.log('sleep')
