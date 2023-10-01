@@ -389,3 +389,19 @@ var integerBreak = function (n) {
     }
     return dp[n];
 };
+
+// 斐波拉契数列，也可以用动态规划写 时间复杂度O(n)
+const fbi = (n) => {
+    const dp = []
+    dp[0] = dp[1] = 1
+    for(let i = 2; i < n; i++){
+        dp[i] = dp[i-1] + dp[i-2]
+    }
+    return dp[n]
+}
+
+const fbi_ = (n) => {
+    if(n <= 2) return 1
+    // 递归的空间复杂度是O(n)， 而双路递归由于有很多重复计算，时间复杂度达到恐怖的O(2n)
+    return fbi_(n-1) + fbi_(n - 2)
+}
