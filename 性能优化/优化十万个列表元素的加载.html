@@ -1,69 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <script>
+      // 监听 dom 是否渲染完毕
+      let stateCheck = setInterval(() => {
+        if (document.readyState === 'complete') {
+          clearInterval(stateCheck);
+          console.timeEnd();
+        }
+      }, 100);
+    </script>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <title>Document</title>
-  <script>
-    // 监听 dom 是否渲染完毕
-    let stateCheck = setInterval(() => {
-      if (document.readyState === 'complete') {
-        clearInterval(stateCheck);
-        console.timeEnd();
+  <body>
+    <ul></ul>
+    <script>
+      console.time();
+      // 插入十万条数据
+      const total = 100000;
+      let ul = document.querySelector('ul'); // 拿到 ul
+
+      // 懒加载的思路 -- 分段渲染
+      // 1. 一次渲染一屏的量
+      const once = 20;
+      // 2. 全部渲染完需要多少次，循环的时候要用
+      const loopCount = total / once;
+      // 3. 已经渲染了多少次
+      let countHasRender = 0;
+
+      // 一次只渲染 20 次
+      function add() {
+        // 创建虚拟节点，（使用 createDocumentFragment 不会触发渲染）
+        const fragment = document.createDocumentFragment();
+        // 循环 20 次
+        for (let i = 0; i < once; i++) {
+          const li = document.createElement('li');
+          li.innerText = Math.floor(Math.random() * total);
+          fragment.appendChild(li);
+        }
+        // 最后把虚拟节点 append 到 ul 上
+        ul.appendChild(fragment);
+        // 4. 已渲染的次数 + 1
+        countHasRender += 1;
+        loop();
       }
-    }, 100);
-  </script>
-</head>
 
-<body>
-  <ul></ul>
-  <script>
-    console.time();
-    // 插入十万条数据
-    const total = 100000;
-    let ul = document.querySelector('ul'); // 拿到 ul
-
-    // 懒加载的思路 -- 分段渲染
-    // 1. 一次渲染一屏的量
-    const once = 20;
-    // 2. 全部渲染完需要多少次，循环的时候要用
-    const loopCount = total / once;
-    // 3. 已经渲染了多少次
-    let countHasRender = 0;
-
-    // 一次只渲染 20 次
-    function add() {
-      // 创建虚拟节点，（使用 createDocumentFragment 不会触发渲染）
-      const fragment = document.createDocumentFragment();
-      // 循环 20 次
-      for (let i = 0; i < once; i++) {
-        const li = document.createElement('li');
-        li.innerText = Math.floor(Math.random() * total);
-        fragment.appendChild(li);
+      // 最重要的部分来了
+      function loop() {
+        // 5. 如果还没渲染完，那么就使用 requestAnimationFrame 来继续渲染
+        if (countHasRender < loopCount) { //loopCount: 5000
+          // requestAnimationFrame 叫做逐帧渲染
+          // 类似于 setTimeout(add, 16);
+          // 帧：一秒钟播放多少张图片，一秒钟播放的图片越多，动画就约流畅
+          // 1000/60 = 16 1000ms
+          window.requestAnimationFrame(add);// 保证是 60帧
+          // setTimeout(add, 16);
+        }
       }
-      // 最后把虚拟节点 append 到 ul 上
-      ul.appendChild(fragment);
-      // 4. 已渲染的次数 + 1
-      countHasRender += 1;
       loop();
-    }
-
-    // 最重要的部分来了
-    function loop() {
-      // 5. 如果还没渲染完，那么就使用 requestAnimationFrame 来继续渲染
-      if (countHasRender < loopCount) { //loopCount: 5000
-        // requestAnimationFrame 叫做逐帧渲染
-        // 类似于 setTimeout(add, 16);
-        // 帧：一秒钟播放多少张图片，一秒钟播放的图片越多，动画就约流畅
-        // 1000/60 = 16 1000ms
-        window.requestAnimationFrame(add);// 保证是 60帧
-        // setTimeout(add, 16);
-      }
-    }
-    loop();
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>

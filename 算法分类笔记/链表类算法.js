@@ -1,80 +1,118 @@
 //一。链表大类
-//1。给你一个单链表的头节点 head ，请你判断该链表是否为回文链表。如果是，返回 true ；否则，返回 false 。
+//1。回文链表
+//给你一个单链表的头节点 head ，请你判断该链表是否为回文链表。如果是，返回 true ；否则，返回 false 。
 //用快慢指针遍历链表, 遍历过程中翻转前半部分连边，接着比较前后部分链表，如果完全一样就是回文链表
 /**
  * @param {ListNode} head
  * @return {boolean}
  */
- var isPalindrome = function(head) {
-    let cur, newHead; // 记录翻转后的前半段链表
-    let slow = head, fast = head; // 快慢指针对原链表进行遍历
-    while(fast && fast.next) {
-        cur = slow; // 准备开始下一次翻转，先记录准备要翻转的结点
-        slow = slow.next; // 往后指
-        fast = fast.next.next;
-        cur.next = newHead; // 要翻转的新结点记录过来
-        newHead = cur; // 赋值
+var isPalindrome = function (head) {
+  let fast = (slow = head)
+  let pre
+  //采用一个快指针和一个慢指针，快指针是慢指针的两倍，
+  //那快指针遍历完的时候，慢指针刚好在中点
+  //遍历完pre就是左半边链表的头节点，slow是右半边链表的头节点
+  while (fast && fast.next) {
+    fast = fast.next.next
+    const temp = slow.next
+    slow.next = pre
+    pre = slow
+    slow = temp
+  }
+  //遍历完如果fast还在链表中，证明链表长度是奇数，这个时候slow正好在中间
+  //需要将slow往后移一个位置才能进行回文遍历
+  if (fast) {
+    slow = slow.next
+  }
+  while (pre && slow) {
+    if (pre.val !== slow.val) {
+      return false
     }
-    // 如果上个循环 fast.next.next 还在链表内，说明是奇数，不清楚的可以画图，一下子豁然开朗
-    if(fast) {
-        slow = slow.next; // 奇数的话，前半部分 比 后半部分少一个，所以后半部分的 slow 指针要先往后指一位，才能开始下面的遍历
-    }
-    while(slow && newHead) {
-        // 不同直接返回
-        if(slow.val !== newHead.val) {
-            return false;
-        }
-        slow = slow.next;
-        newHead = newHead.next;
-    }
-    return true;
-};
+    pre = pre.next
+    slow = slow.next
+  }
+  return true
+}
 //2.翻转链表
 //采用两个指针，只需要把cur指针指向pre，然后把cur和pre往前移动即可，当然中间需要用一个变量next保存cur.next，cur指针指向pre后链表会断掉
 /**
  * @param {ListNode} head
  * @return {ListNode}
  */
- var reverseList = function(head) {
-    let cur = head, pre = null, next
-    while(cur){
-        next = cur.next
-        cur.next = pre
-        pre = cur
-        cur = next
-    }
-    return pre
-};
+var reverseList = function (head) {
+  let cur = head,
+    pre = null,
+    next
+  while (cur) {
+    next = cur.next
+    cur.next = pre
+    pre = cur
+    cur = next
+  }
+  return pre
+}
 //3.删除链表的倒数第 N 个结点
-//思路：先移动偏移量n，n是要删除的倒数第n个数。然后，共同移动。目的，就是能找在一次循环中找到倒数第n个数的前一个位置即n-1
-var removeNthFromEnd = function(head, n) {
-    const res = new ListNode('')
-    res.next = head
-    let start = res
-    let flag = 0
-    let end = res
-    while(flag < n){
-        start = start.next
-        flag ++ 
-    }
-    while(start.next !== null){
-        start = start.next
-        end = end.next
-    }
-    end.next = end.next.next
-    return res.next
-};
+/**
+ * @param {ListNode} head
+ * @param {number} n
+ * @return {ListNode}
+ */
+var removeNthFromEnd = function (head, n) {
+  //需要新增一个节点的原因是会存在[1]然后删除倒数1个节点，返回[]的用例
+  //不新增会报错
+  const newHead = new ListNode()
+  newHead.next = head
+  let fast = (slow = newHead)
+  //用快慢指针，快指针先走n步，然后快慢指针再一起走，当快指针到达尾部的时候
+  //慢指针就在该删除的位置了
+  while (n > 0) {
+    fast = fast.next
+    n--
+  }
+  while (fast.next !== null) {
+    //注意需要是!== null而不能写成!fast.next
+    slow = slow.next
+    fast = fast.next
+  }
+  slow.next = slow.next.next
+  return newHead.next
+}
 //4.合并k个升序链表（hard）
 //给你一个链表数组，每个链表都已经按升序排列。请你将所有链表合并到一个升序链表中，返回合并后的链表。
-var mergeKLists = function(lists) {
-    return lists.reduce((p,n)=>{
-        while(n){
-            p.push(n)
-            n = n.next
-        }
-        return p
-    },[]).sort((a,b)=>a.val - b.val).reduceRight((p,n)=>{n.next = p; p=n; return p},null)
-};
+//思路：直接归并排序就好，本质就是将数组拆分到只有一个元素，再调用merge递归合并两个有序数组
+/**
+ * @param {ListNode[]} lists
+ * @return {ListNode}
+ */
+var mergeKLists = function (lists) {
+  if (!lists.length) return null
+  //采用归并排序
+  return mergeList(lists, 0, lists.length - 1)
+}
+function mergeList(lists, start, end) {
+  //说明只剩一个链表，将这个链表返回
+  if (start === end) {
+    return lists[start]
+  }
+  const mid = Math.floor((start + end) / 2)
+  return merge(mergeList(lists, start, mid), mergeList(lists, mid + 1, end))
+}
+function merge(l1, l2) {
+  const res = new ListNode()
+  let cur = res
+  while (l1 && l2) {
+    if (l1.val >= l2.val) {
+      cur.next = l2
+      l2 = l2.next
+    } else {
+      cur.next = l1
+      l1 = l1.next
+    }
+    cur = cur.next
+  }
+  cur.next = l1 ? l1 : l2
+  return res.next
+}
 //5.k个一组翻转链表（hard）
 //给你链表的头节点 head ，每 k 个节点一组进行翻转，请你返回修改后的链表。
 /**
@@ -82,62 +120,96 @@ var mergeKLists = function(lists) {
  * @param {number} k
  * @return {ListNode}
  */
- var reverseKGroup = function(head, k) {
-    //用于进行链表转换
-    let pre = null,cur = head;
-    let p = head;
-    //查找长度是否满足反转的数量
-    for(let i = 0;i<k;i++){
-        if(p == null) return head;
-        p = p.next;
+var reverseKGroup = function (head, k) {
+  //起始就是先将前k个翻转，然后递归进行后边的翻转
+  let pre = new ListNode(0, head)
+  let p = (cur = head)
+  let temp
+  //判断链表是否满足翻转条件，不满足直接返回head
+  for (let i = 0; i < k; i++) {
+    if (p === null) {
+      return head
     }
-    //对该k个链表元素进行反转
-    for(let j = 0;j<k;j++){//向前反转，因此反转完head才是最后一个
-        let temp = cur.next;
-        cur.next = pre;
-        pre = cur;
-        cur = temp;
-    }
-    //反转后。head.next已经成为当前反转后链表的最后一个元素，它的指向将是下一个递归的开始点
-    //而此时pre已经是最后一个元素，cur是下一个范围的第一元素
-    head.next = reverseKGroup(cur,k);
-    return pre;
-};
+    p = p.next
+  }
+  for (let j = 0; j < k; j++) {
+    temp = cur.next
+    cur.next = pre
+    pre = cur
+    cur = temp
+  }
+  console.log(pre)
+  //继续递归翻转下k个元素, 注意这块需要用head去连接，因为已经翻转过来了
+  //head变成了以翻转链表的尾部了，如1->2->3->4->5转为1<-2<-3 4->5，这个时候3是pre，4是cur
+  head.next = reverseKGroup(cur, k)
+  return pre
+}
 //6.环形链表
 //给你一个链表的头节点 head ，判断链表中是否有环。
-//采用快慢指针法，如果有环快指针总归会遇到慢指针
 /**
  * @param {ListNode} head
  * @return {boolean}
  */
- var hasCycle = function(head) {
-    let slow = head, fast = head
-    while(fast && fast.next){
-        fast = fast.next.next
-        slow = slow.next
-        if(slow == fast){
-            return true
-        }
+var hasCycle = function (head) {
+  //用一个set去存链表地址，如果遍历过程中，发现遍历的地址存在于set中
+  //那么说明这是一个环形链表
+  const set = new Set()
+  while (head) {
+    if (set.has(head)) {
+      return true
     }
-    return false
-};
+    set.add(head)
+    head = head.next
+  }
+  return false
+}
 //7.环形链表2
 //给定一个链表的头节点  head ，返回链表开始入环的第一个节点。 如果链表无环，则返回 null。
 /**
  * @param {ListNode} head
  * @return {ListNode}
  */
- var detectCycle = function(head) {
-    const visited = new Set();
-    while (head !== null) {//终止条件，如果没有环 跳出循环
-        if (visited.has(head)) {//如果存在重复的节点，这个节点就是入环节点
-            return head;
-        }
-        visited.add(head);//将节点加入set中
-        head = head.next;
+var detectCycle = function (head) {
+  const set = new Set()
+  while (head) {
+    if (set.has(head)) {
+      return head
     }
-    return null;
-};
+    set.add(head)
+    head = head.next
+  }
+  return null
+}
+//双指针法
+/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var detectCycle = function (head) {
+  let slow = head,
+    fast = head
+  while (fast) {
+    if (fast.next === null) {
+      //说明fast走出链表，无环返回null
+      return null
+    }
+    slow = slow.next //慢指针走一步
+    fast = fast.next.next //快指针走两步
+    if (fast === slow) {
+      //第一次相遇在首次相遇点
+      fast = head //将快指针重置，开启循环，让快慢指针在入环点相遇
+      while (true) {
+        if (fast === slow) {
+          //再次相遇，在入环点
+          return slow
+        }
+        fast = fast.next
+        slow = slow.next
+      }
+    }
+  }
+  return null
+}
 //8.排序链表
 //归并算法思路:比如有链表长度是 8，将 8 分成左右各 4 个，再将 4 个分成左右各 2 个，再将 2 个分成左右各 1 个，数量为 1 以后，
 //再 return 回去左右两个链表合并排序后的结果
@@ -145,45 +217,39 @@ var mergeKLists = function(lists) {
  * @param {ListNode} head
  * @return {ListNode}
  */
- var sortList = function(head) {
-    return toSortList(head, null)
-};
-//分割
-const toSortList = (head, tail) => {
-    if (head === null) {//极端情况
-        return head;
-    }
-    if (head.next === tail) {//分割到只剩一个节点
-        head.next = null;
-        return head;
-    }
-    let slow = head, fast = head;
-    while (fast !== tail) {//的到中间节点
-        slow = slow.next;
-        fast = fast.next;
-        if (fast !== tail) {
-            fast = fast.next;
-        }
-    }
-    const mid = slow;
-    return merge(toSortList(head, mid), toSortList(mid, tail));//分割区间 递归合并
+var sortList = function (head) {
+  //如果只剩一个节点，停止分割
+  if (!head || !head.next) return head
+  //归并的切割，用快慢指针来
+  let fast = head,
+    slow = head
+  let preSlow = null
+  while (fast && fast.next) {
+    preSlow = slow
+    slow = slow.next
+    fast = fast.next.next
+  }
+  //preSlow的作用是将链表剪断
+  preSlow.next = null
+  return merge(sortList(head), sortList(slow))
 }
-//合并
-const merge = (l1,l2) => {
-    const newHead = new ListNode('')
-    let cur = newHead
-    while(l1 && l2){
-        if(l1.val <= l2.val){
-            cur.next = l1
-            l1 = l1.next
-        }else{
-            cur.next = l2
-            l2 = l2.next
-        }
-        cur = cur.next
+
+//merge起始就是合并两个有序链表
+function merge(l1, l2) {
+  let res = new ListNode()
+  let cur = res
+  while (l1 && l2) {
+    if (l1.val >= l2.val) {
+      cur.next = l2
+      l2 = l2.next
+    } else {
+      cur.next = l1
+      l1 = l1.next
     }
-    cur.next = l1?l1:l2
-    return newHead.next
+    cur = cur.next
+  }
+  cur.next = l1 ? l1 : l2
+  return res.next
 }
 //9.合并两个有序链表
 /**
@@ -191,22 +257,23 @@ const merge = (l1,l2) => {
  * @param {ListNode} list2
  * @return {ListNode}
  */
- var mergeTwoLists = function(list1, list2) {
-    let newHead = new ListNode('')
-    let cur = newHead
-        while(list1 && list2){
-            if(list1.val <= list2.val){
-                cur.next = list1
-                list1 = list1.next
-            }else{
-                cur.next = list2
-                list2 = list2.next
-            }
-            cur = cur.next
-        }
-        cur.next = list1?list1:list2
-        return newHead.next
-};
+var mergeTwoLists = function (list1, list2) {
+  const newHead = new ListNode()
+  let cur = newHead
+  //两个链表一起遍历，比大小
+  while (list1 && list2) {
+    if (list1.val >= list2.val) {
+      cur.next = list2
+      list2 = list2.next
+    } else {
+      cur.next = list1
+      list1 = list1.next
+    }
+    cur = cur.next
+  }
+  cur.next = l1 ? l1 : l2
+  return newHead.next
+}
 //10.相交链表
 //给你两个单链表的头节点 headA 和 headB ，请你找出并返回两个单链表相交的起始节点。如果两个链表不存在相交节点，返回 null 。
 /**
@@ -214,17 +281,90 @@ const merge = (l1,l2) => {
  * @param {ListNode} headB
  * @return {ListNode}
  */
- var getIntersectionNode = function(headA, headB) {
-    const set = new Set()
-    while(headA){
-        set.add(headA)
-        headA = headA.next
+var getIntersectionNode = function (headA, headB) {
+  //用一个set去存一个链表遍历的值，遍历另一个链表，
+  //如果遍历的值在set中，说明这个节点就是相交点返回这个节点
+  const set = new Set()
+  while (headA) {
+    set.add(headA) //注意这块存入的是链表节点地址，因为相交是地址一样
+    headA = headA.next
+  }
+  while (headB) {
+    if (set.has(headB)) {
+      return headB
     }
-    while(headB){
-        if(set.has(headB)){
-            return headB
-        }
-        headB = headB.next
-    }
-    return null
-};  
+    headB = headB.next
+  }
+  return null
+}
+
+//11.两数相加
+/* 给你两个 非空 的链表，表示两个非负的整数。它们每位数字都是按照 逆序 的方式存储的，并且每个节点只能存储 一位 数字。
+请你将两个数相加，并以相同形式返回一个表示和的链表。
+ */
+/**
+ * @param {ListNode} l1
+ * @param {ListNode} l2
+ * @return {ListNode}
+ */
+var addTwoNumbers = function (l1, l2) {
+  const head = new ListNode()
+  let cur = head,
+    addNum = 0
+  while (l1 || l2 || addNum) {
+    const sum = (l1?.val || 0) + (l2?.val || 0) + addNum
+    addNum = sum >= 10 ? 1 : 0
+    cur.next = new ListNode(sum % 10)
+    cur = cur.next
+    l1 = l1 ? l1.next : null
+    l2 = l2 ? l2.next : null
+  }
+  return head.next
+}
+
+//12.两两交换链表中的节点
+/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var swapPairs = function (head) {
+  const newHead = new ListNode(0, head)
+  let temp = newHead
+  while (temp.next !== null && temp.next.next !== null) {
+    let pre = temp.next
+    let cur = temp.next.next
+    //将temp下一个指为cur
+    temp.next = cur
+    //将pre和cur换位置
+    pre.next = cur.next
+    //将cur的next置为pre，这个时候已经是cur -> pre了
+    cur.next = pre
+    temp = pre
+  }
+  return newHead.next
+}
+
+//13.随机链表的复制
+/**
+ * @param {Node} head
+ * @return {Node}
+ */
+var copyRandomList = function (head) {
+  if (!head) return head
+  //题意起始就是要复制一个链表，因为是深拷贝，所以需要新建节点，用一个map存新建的节点
+  const map = new Map()
+  let cur = head
+  //遍历，将新节点存入map
+  while (cur !== null) {
+    map.set(cur, new Node(cur.val)) //这里只用val，random这时还是指向旧的节点
+    cur = cur.next
+  }
+  //重新遍历，将新节点的next和random都指向新的节点
+  cur = head
+  while (cur !== null) {
+    map.get(cur).next = map.get(cur.next) || null
+    map.get(cur).random = map.get(cur.random) || null
+    cur = cur.next
+  }
+  return map.get(head)
+}
