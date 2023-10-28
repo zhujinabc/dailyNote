@@ -33,43 +33,77 @@ var findKthLargest = function (nums, k) {
   //构造一个大顶堆
   const buildMaxHeap = (nums, heapSize) => {
     for (let i = Math.floor(heapSize / 2) - 1; i >= 0; i--) {
-      maxHeapify(nums, heapSize, i)
+      maxHeapify(nums, heapSize, i);
     }
-  }
+  };
 
   //从左往右，自上而下的调整节点
   const maxHeapify = (nums, heapSize, i) => {
-    let l = i * 2 + 1 //左叶子节点
-    let r = i * 2 + 2 //右叶子节点
-    let largest = i
+    let l = i * 2 + 1; //左叶子节点
+    let r = i * 2 + 2; //右叶子节点
+    let largest = i;
     if (l < heapSize && nums[l] > nums[largest]) {
-      largest = l
+      largest = l;
     }
     if (r < heapSize && nums[r] > nums[largest]) {
-      largest = r
+      largest = r;
     }
     if (largest !== i) {
-      swap(nums, i, largest)
+      swap(nums, i, largest);
       //继续调整的原因是，第一次调整后，有可能还存在另一个叶子节点大于跟节点的情况
-      maxHeapify(nums, heapSize, largest)
+      maxHeapify(nums, heapSize, largest);
     }
-  }
+  };
 
   //替换位置
   const swap = (a, i, j) => {
-    const temp = a[i]
-    a[i] = a[j]
-    a[j] = temp
-  }
-  let heapSize = nums.length
-  buildMaxHeap(nums, heapSize) //构建一个初始大顶堆,此时最大元素就是第一个元素了
+    const temp = a[i];
+    a[i] = a[j];
+    a[j] = temp;
+  };
+  let heapSize = nums.length;
+  buildMaxHeap(nums, heapSize); //构建一个初始大顶堆,此时最大元素就是第一个元素了
   //构建好后，将最大元素和末尾元素替换，i>=nums.length - k + 1 替换k次就得到第k大的元素
   //如果这个地方i >= 0那么最终nums数组就是排序好的，整个代码就是堆排序
   for (let i = nums.length - 1; i >= nums.length - k + 1; i--) {
-    swap(nums, 0, i)
-    --heapSize
+    swap(nums, 0, i);
+    --heapSize;
     //因为元素替换后，并且size减了1，结构不符合大顶堆了，因此需要继续调整结构
-    maxHeapify(nums, heapSize, 0)
+    maxHeapify(nums, heapSize, 0);
   }
-  return nums[0]
+  return nums[0];
+};
+
+function aa(nums) {
+  const len = nums.length;
+  const swap = (i, j) => {
+    const temp = nums[i];
+    nums[i] = nums[j];
+    nums[j] = temp;
+  };
+  const maxHeapify = (i, l, r) => {
+    let largest = i;
+    if (l < len && nums[l] > nums[largest]) {
+      largest = l;
+    }
+    if (r < len && nums[r] > nums[largest]) {
+      largest = r;
+    }
+    if (largest !== i) {
+      swap(i, largest);
+      maxHeapify(largest, largest * 2 + 1, largest * 2 + 2);
+    }
+  };
+  const buildTree = () => {
+    for (let i = len / 2 + 1; i >= 0; i--) {
+      maxHeapify(i, 2 * i + 1, 2 * i + 2);
+    }
+  };
+  buildTree(); //创建一个大顶堆
+  for (let i = len - 1; i < len - k + 1; i++) {
+    swap(i, 0);
+    --len;
+    maxHeapify(0, 1, 2);
+  }
+  return nums[0];
 }
