@@ -75,19 +75,6 @@ var findMinArrowShots = function (points) {
   }
   return res;
 };
-// 5.整数拆分和剪绳子都可以用贪心来写
-//数字拆分为更多的 3，其次为 2，最差为 1，可让乘积最大化。
-//但是，若最终拆出来，剩下一个 1，我们将其中一个 3 + 1 ，组成一个 4，可让乘积更大化。
-var integerBreak = function (n) {
-  if (n <= 3) return n - 1;
-
-  let res = 1;
-  while (n > 4) {
-    n -= 3;
-    res = res * 3;
-  }
-  return n * res;
-};
 
 // 6.划分字母区间
 // 给你一个字符串 s 。我们要把这个字符串划分为尽可能多的片段，同一字母最多出现在一个片段中。

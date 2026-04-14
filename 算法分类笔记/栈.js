@@ -5,25 +5,16 @@
  * @return {boolean}
  */
 var isValid = function (s) {
-  if (s.length % 2) return false;
   const stack = [];
   for (let item of s) {
-    //采用栈来做
-    switch (item) {
-      case '(':
-      case '{':
-      case '[':
-        stack.push(item);
-        break;
-      case ')':
-        if (stack.pop() !== '(') return false;
-        break;
-      case '}':
-        if (stack.pop() !== '{') return false;
-        break;
-      case ']':
-        if (stack.pop() !== '[') return false;
-        break;
+    if (item === '(' || item === '{' || item === '[') {
+      stack.push(item);
+    } else if (item === ')' && stack.pop() !== '(') {
+      return false;
+    } else if (item === ']' && stack.pop() !== '[') {
+      return false;
+    } else if (item === '}' && stack.pop() !== '{') {
+      return false;
     }
   }
   return !stack.length;
@@ -103,17 +94,11 @@ var dailyTemperatures = function (temperatures) {
   // 什么时候用单调栈： 通常是一维数组，要寻找任一元素右边（左边）第一个比自己大（小）的元素
   // 要求时间复杂度是O(n)
   // 单调递增和单调递减栈两种，单调递减栈会剔除波谷留下波峰，单调递增栈会剔除波峰留下波谷
-  for (let i = temperatures.length - 1; i >= 0; i--) {
-    // 如果当前元素大于栈顶元素将其出栈，直至遇到比当前元素大的元素
-    while (
-      stack.length &&
-      temperatures[i] >= temperatures[stack[stack.length - 1]]
-    ) {
-      stack.pop();
-    }
-    //如果栈不为空，说明存在比当前元素大的元素，可以计算距离
-    if (stack.length) {
-      res[i] = stack[stack.length - 1] - i;
+  for (let i = 0; i < temperatures.length; i++) {
+    // 如果当前元素比栈顶元素大，说明栈顶元素的右边第一个比它大的元素就是当前元素
+    while (temperatures[i] > temperatures[stack[stack.length - 1]]) {
+      const topStackItem = stack.pop();
+      res[topStackItem] = i - topStackItem;
     }
     stack.push(i);
   }

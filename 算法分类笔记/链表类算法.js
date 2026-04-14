@@ -39,15 +39,15 @@ var isPalindrome = function (head) {
  * @param {ListNode} head
  * @return {ListNode}
  */
+
 var reverseList = function (head) {
   let cur = head,
-    pre = null,
-    next;
+    pre = null;
   while (cur) {
-    next = cur.next;
+    const temp = cur.next;
     cur.next = pre;
     pre = cur;
-    cur = next;
+    cur = temp;
   }
   return pre;
 };
@@ -84,6 +84,7 @@ var removeNthFromEnd = function (head, n) {
  * @param {ListNode[]} lists
  * @return {ListNode}
  */
+
 var mergeKLists = function (lists) {
   if (!lists.length) return null;
   //采用归并排序
@@ -177,36 +178,6 @@ var detectCycle = function (head) {
     }
     set.add(head);
     head = head.next;
-  }
-  return null;
-};
-//双指针法
-/**
- * @param {ListNode} head
- * @return {ListNode}
- */
-var detectCycle = function (head) {
-  let slow = head,
-    fast = head;
-  while (fast) {
-    if (fast.next === null) {
-      //说明fast走出链表，无环返回null
-      return null;
-    }
-    slow = slow.next; //慢指针走一步
-    fast = fast.next.next; //快指针走两步
-    if (fast === slow) {
-      //第一次相遇在首次相遇点
-      fast = head; //将快指针重置，开启循环，让快慢指针在入环点相遇
-      while (true) {
-        if (fast === slow) {
-          //再次相遇，在入环点
-          return slow;
-        }
-        fast = fast.next;
-        slow = slow.next;
-      }
-    }
   }
   return null;
 };
@@ -337,7 +308,7 @@ var swapPairs = function (head) {
     temp.next = cur;
     //将pre换到cur的位置上
     pre.next = cur.next;
-    //将cur的next置为pre，这个时候已经是cur -> pre了
+    //将cur的next置为pre，变成cur -> pre
     cur.next = pre;
     temp = pre;
   }

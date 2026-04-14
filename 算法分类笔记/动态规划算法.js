@@ -66,7 +66,8 @@ var numTrees = function (n) {
   dp[1] = 1;
   for (let i = 2; i <= n; i++) {
     for (let j = 1; j <= i; j++) {
-      dp[i] += dp[j - 1] * dp[i - j];
+      dp[i] += dp[j - 1] * dp[i - j]; //对于固定的根节点 j，左子树的每一种形态都可以和右子树的每一种形态组合，形成一棵新的 BST。
+      // 所以是相乘
     }
   }
   return dp[n];
@@ -81,7 +82,7 @@ var numTrees = function (n) {
  * @return {number}
  */
 var coinChange = function (coins, amount) {
-  let dp = new Array(amount + 1).fill(Infinity); // 因为0也算所有数组长度加1，同时因为求最小值，所以数组初始化为Infinity
+  let dp = new Array(amount + 1).fill(Infinity); // 因为0也算所有数组长度加1，同时因为求最小值，所以数组初始化为最大值Infinity
   dp[0] = 0;
   for (let i = 1; i <= amount; i++) {
     for (let j = 0; j < coins.length; j++) {
@@ -128,10 +129,13 @@ var uniquePaths = function (m, n) {
 var uniquePathsWithObstacles = function (obstacleGrid) {
   let m = obstacleGrid.length;
   let n = obstacleGrid[0].length;
+  // 方法一
   let dp = new Array(m);
   for (let i = 0; i < m; i++) {
     dp[i] = new Array(n).fill(0);
   }
+  // 方法二，有问题的原因在于，dp[0][0]初始化为0，导致后续dp[0][i]和dp[i][0]都初始化为0，从而影响结果
+  // const dp = new Array(m).fill(new Array(n).fill(0));
   dp[0][0] = obstacleGrid[0][0] == 0 ? 1 : 0;
   if (dp[0][0] == 0) {
     return 0;
@@ -170,7 +174,6 @@ var minPathSum = function (grid) {
   const m = grid.length,
     n = grid[0].length;
   const dp = new Array(m).fill(new Array(n).fill(0));
-  dp[0][0] = grid[0][0];
   for (let i = 0; i < m; i++) {
     for (let j = 0; j < n; j++) {
       if (i === 0 && j !== 0) {
@@ -336,6 +339,33 @@ var rob = function (nums) {
   }
   return Math.max(...dp);
 };
+//15.打家劫舍
+//如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警，房间是环形的。
+// 使用两个dp数组，一个数组偷第一家，一个数组偷最后一家
+/**
+ * @param {number[]} nums
+ * @return {number}
+ */
+var rob = function (nums) {
+  const n = nums.length;
+  if (n == 1) {
+    return nums[0];
+  }
+  //投第一家
+  const dp1 = new Array(n).fill(0);
+  //偷第n-1家
+  const dp2 = new Array(n).fill(0);
+  dp1[0] = nums[0];
+  dp1[1] = Math.max(nums[0], nums[1]);
+  dp2[0] = 0;
+  dp2[1] = nums[1];
+  for (let i = 2; i < nums.length; i++) {
+    dp1[i] = Math.max(dp1[i - 2] + nums[i], dp1[i - 1]);
+    dp2[i] = Math.max(dp2[i - 2] + nums[i], dp2[i - 1]);
+  }
+  // 之所以是n-2和n-1是因为，dp1是最后一家不偷，所以最大值是倒数第二家，dp2是最后一家偷，所以最大值是倒数第一家
+  return Math.max(dp1[n - 2], dp2[n - 1]);
+};
 //16.打家劫舍2
 //树形dp
 //返回数组就是dp数组。所以dp数组（dp table）以及下标的含义：下标为0记录不偷该节点所得到的的最大金钱，下标为1记录偷该节点所得到的的最大金钱
@@ -363,7 +393,7 @@ var rob = function (root) {
   // 返回最大值
   return Math.max(...res);
 };
-//17.最小编辑距离（hard）
+//17.最小编辑距离
 
 //思路：dp[i][j] 表示 word1 的前 i 位 和 word2 的前 j 位之间的最少操作数。
 //dp[i][j] 表示以下标i-1为结尾的字符串word1，和以下标j-1为结尾的字符串word2，最近编辑距离为dp[i][j]。

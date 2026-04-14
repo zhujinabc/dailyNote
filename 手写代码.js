@@ -25,6 +25,47 @@ function partition(arr, left, right) {
   return left;
 }
 
+// 深拷贝
+const deepClone = (obj) => {
+  // WeakMap 只存对象引用，不影响垃圾回收，防止循环引用
+  const map = new WeakMap();
+  const clone = (target) => {
+    // 1. 处理基本类型和 null
+    if (target === null || typeof target !== 'object') return target;
+    // 2. 处理循环引用
+    if (map.has(target)) return map.get(target);
+    // 3. 处理特殊引用类型
+    if (target instanceof Date) return new Date(target);
+    if (target instanceof RegExp) return new RegExp(target);
+    if (target instanceof Map) {
+      const cloneMap = new Map();
+      map.set(target, cloneMap);
+      target.forEach((value, key) => {
+        cloneMap.set(clone(key), clone(value));
+      });
+      return cloneMap;
+    }
+    if (target instanceof Set) {
+      const cloneSet = new Set();
+      map.set(target, cloneSet);
+      target.forEach((value) => {
+        cloneSet.add(clone(value));
+      });
+      return cloneSet;
+    }
+    // 4. 处理普通对象和数组，保留原型链
+    const cloneTarget = new target.constructor();
+    map.set(target, cloneTarget);
+    // 5. 遍历所有自身属性（包括 Symbol）
+    Reflect.ownKeys(target).forEach((key) => {
+      cloneTarget[key] = clone(target[key]);
+    });
+    return cloneTarget;
+  };
+
+  return clone(obj);
+};
+
 // ============================================
 // 二、防抖与节流
 // ============================================
@@ -32,20 +73,53 @@ function partition(arr, left, right) {
 // 1. 防抖函数 (带立即执行选项)
 function debounce(fn, delay, immediate = false) {
   let timer;
-  return function (...args) {
+  const res = function () {
     const callNow = immediate && !timer;
     clearTimeout(timer);
     timer = setTimeout(() => {
       timer = null;
       if (!immediate) {
-        fn.apply(this, args);
+        fn.call(this, arguments);
       }
     }, delay);
-    if (callNow) {
-      fn.apply(this, args);
+    if (callNow) fn.call(this, arguments);
+  };
+  res.cancel = function () {
+    clearTimeout(timer);
+    timer = null;
+  };
+  return res;
+}
+
+const aa = (obj) => {
+  const res = {};
+  const bb = (obj, prefix = '.') => {
+    for (const [k, v] of Object.entries(obj)) {
+      const pre = prefix + k;
+      if (Array.isArray(v)) {
+        v.forEach((item, index) => {
+          if (typeof item === 'object' && item !== null) {
+            bb(item, `${pre}.${index}`);
+          } else {
+            res[`${pre}.${index}`] = item;
+          }
+        });
+        return;
+      }
+      if (typeof v === 'object' && v !== null) {
+        Object.keys(v).forEach((key) => {
+          if (typeof item === 'object' && item !== null) {
+            bb(item, `${pre}.${key}`);
+          } else {
+            res[`${pre}.${key}`] = item;
+          }
+        });
+        return;
+      }
+      res[pre] = v;
     }
   };
-}
+};
 
 // 2. 节流函数 (带leading和trailing选项)
 function throttle(fn, delay, { leading = true, trailing = true } = {}) {
@@ -118,32 +192,23 @@ Array.prototype.flat = function (depth) {
     );
   }, []);
 };
+
 //实现数组map方法
-Array.prototype.map = function (fn) {
-  if (typeof fn !== 'function') {
-    throw new Error(`${fn} is not a function`);
-  }
-  let arr = this;
-  let result = [];
-  for (let i = 0; i < arr.length; i++) {
-    result.push(fn.call(null, arr[i], i, arr));
-  }
-  return result;
+Array.prototype.map = function (fn, context) {
+  return this.reduce((pre, cur, index) => {
+    pre.push(fn.call(context, cur, index, this));
+    return pre;
+  }, []);
 };
+
 //实现数组的fillter方法
-Array.prototype.filter = function (fn) {
-  if (typeof fn !== 'function') {
-    throw new Error(`${fn} is not a function`);
-  }
-  let arr = this;
-  let result = [];
-  for (let i = 0; i < arr.length; i++) {
-    let temp = fn.call(null, arr[i], i, arr);
-    if (temp) {
-      result.push(arr[i]);
+Array.prototype.filter = function (fn, context) {
+  return this.reduce((pre, cur, index) => {
+    if (fn.call(context, cur, index, this)) {
+      pre.push(cur);
     }
-  }
-  return result;
+    return pre;
+  }, []);
 };
 
 //实现call,apply,bind函数
@@ -175,12 +240,15 @@ Function.prototype.myApply = function (context) {
   delete context.fn;
   return result;
 };
+
+// const aa = bb.bind(context);
+// const cc = new aa()
 Function.prototype.myBind = function (context) {
   if (typeof this !== 'function') {
     throw new Error('this is not a funtion');
   }
-  let _this = this;
-  let args = [...arguments].slice(1);
+  let _this = this; //当前调用bind的函数
+  let args = [...arguments].slice(1); // bind的时候传入的参数
   return function F() {
     if (this instanceof F) {
       // 因为返回了⼀个函数，我们可以 new F()，所以需要判断
@@ -192,6 +260,20 @@ Function.prototype.myBind = function (context) {
 
 //实现继承
 // ES5
+
+class Parent {
+  constuctor(name, age) {
+    this.name = name;
+    this.age = age;
+  }
+}
+class Child extends Parent {
+  constuctor(name, age, sex) {
+    this.sex = sex;
+    super(name, age);
+  }
+}
+
 function Parent(name, age) {
   this.name = name;
   this.age = age;
@@ -418,7 +500,26 @@ Promise.retry = function (promise, times, delay) {
     action();
   });
 };
+
+//如何实现一个超时控制机制
+const timeout = (fetch, delay) => {
+  return Promise.race([
+    fetch,
+    new Promise((_, rej) =>
+      setTimeout(() => {
+        rej(new Error('timeout'));
+      }, delay)
+    ),
+  ]);
+};
+
+const aa = promisify(fn).then((res) => {
+  console.log(res);
+});
+
 //将一个同步回调封装成一个promise
+Promise.resolve(fn()); // 这样就好了
+
 function promisify(fn) {
   return (...args) => {
     //该函数返回的应该是一个函数，而该返回的函数返回的是一个promise
@@ -432,18 +533,13 @@ function promisify(fn) {
     });
   };
 }
+
 //实现函数柯里化
-function curry(fn, args) {
-  var length = fn.length;
-  var args = args || [];
-  return function () {
-    newArgs = args.concat(...arguments);
-    if (newArgs.length < length) {
-      return curry.call(this, fn, newArgs);
-    } else {
-      return fn.apply(this, newArgs);
-    }
-  };
+function curry(fn, ...args) {
+  if (args.length >= fn.length) {
+    return fn(...args);
+  }
+  return (...newArgs) => curry(fn, ...args, ...newArgs);
 }
 // 调用
 const foo = (a, b, c) => a * b * c;
@@ -451,56 +547,144 @@ curry(foo)(2, 3, 4); // -> 24
 curry(foo, 2)(3, 4); // -> 24
 curry(foo, 2, 3)(4); // -> 24
 curry(foo, 2, 3, 4)(); // -> 24
+
+// 无限柯里化
+function infiniteCurry(fn) {
+  const args = [];
+  return function next(...newArgs) {
+    if (newArgs.length === 0) {
+      return fn(...args);
+    }
+    args.push(...newArgs);
+    return next;
+  };
+}
+
 //实现一个并发请求控制函数，限制并发数
-function createRequest(tasks = [], pool) {
-  pool = pool || 5; //限制并发的数量
-  let results = [];
-  let running = 0; // 当前运行个数
-  let resultsLength = tasks.length; // 用来判断最后的是否全部成功
-  return new Promise((resolve, reject) => {
-    run();
-    function run() {
-      while (running < pool && tasks.length) {
-        // 这个wile循环保证 一直有pool个请求在进行
+function createRequest(taskList = [], pool) {
+  let running = 0;
+  const len = taskList.length;
+  const result = [];
+  let currentIndex = 0;
+  return new Promise((res, rej) => {
+    const run = () => {
+      while (running < pool && currentIndex < len) {
         running++;
-        let task = tasks.shift();
+        const index = currentIndex++;
+        const task = taskList[index];
         task()
-          .then((result) => {
-            results.push(result);
+          .then((val) => {
+            result[index] = val;
+          })
+          .catch((err) => {
+            result[index] = err;
           })
           .finally(() => {
             running--;
-            run();
+            if (result.length === len) {
+              res(result);
+            } else {
+              run();
+            }
           });
       }
-      if (results.length === resultsLength) {
-        // 全部执行结束
-        resolve(results);
-      }
-    }
+    };
+    run();
   });
 }
 
-//实现一个函数add(3)(4)(5)(6)(7)(8)
-function add(m) {
-  const temp = function (n) {
-    return add(m + n);
-  };
-  temp.toString = function () {
-    return m;
-  };
-  return temp;
-}
-
-//实现add(1)(4, 5, 6)(7, 8)(10)=41
-function addMulti(...args) {
-  function inner(...otherArgs) {
-    args = [...args, ...otherArgs];
-    return inner;
+//实现一个Promise 并发限制调度器
+class Scheduler {
+  constructor(limit) {
+    this.limit = limit; // 最大并发数
+    this.running = 0; // 当前执行数
+    this.queue = []; // 等待队列
   }
-  inner.toString = () => args.reduce((acc, cur) => acc + cur, 0);
-  return inner;
+
+  add(task) {
+    return new Promise((resolve, reject) => {
+      // 把任务和resolve/reject一起入队
+      this.queue.push({ task, resolve, reject });
+      this.run();
+    });
+  }
+
+  run() {
+    // 达到并发上限或无等待任务，直接返回
+    if (this.running >= this.limit || this.queue.length === 0) return;
+    this.running++;
+    const { task, resolve, reject } = this.queue.shift();
+    // 执行任务
+    Promise.resolve(task())
+      .then(resolve)
+      .catch(reject)
+      .finally(() => {
+        this.running--;
+        this.run(); // 执行下一个任务
+      });
+  }
 }
+// 测试用例
+// const scheduler = new Scheduler(2);
+// const timeout = (time) => new Promise((r) => setTimeout(r, time));
+// const addTask = (time, order) => {
+//   scheduler.add(() => timeout(time)).then(() => console.log(order));
+// };
+// addTask(1000, '1');
+// addTask(500, '2');
+// addTask(300, '3');
+// addTask(400, '4');
+// 输出顺序：2 → 3 → 1 → 4
+
+//实现一个带重试和超时控制的fetch
+const fetchWithRetry = (url, options, retries = 3, timeout = 5000) => {
+  let count = 0;
+  return new Promise((res, rej) => {
+    const run = async () => {
+      const abortController = new AbortController();
+      const timer = setTimeout(() => {
+        abortController.abort();
+      }, timeout);
+
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: abortController.signal,
+        });
+        clearTimeout(timer);
+        const data = await response.json();
+        res(data);
+      } catch (err) {
+        if (count >= retries) {
+          rej(err);
+        } else {
+          count++;
+          run();
+        }
+      }
+    };
+    run();
+  });
+};
+
+//实现一个函数add(3)(4)(5)(6)(7)(8)
+const aa = (...args) => {
+  const temp = function (...newArgs) {
+    return aa(...args, ...newArgs);
+  };
+  const sum = args.reduce((pre, cur) => pre + cur, 0);
+  temp.toString = () => sum; // ✅ 箭头函数返回 sum
+  temp.valueOf = () => sum; // ✅ 支持 + 运算
+  return temp;
+};
+
+// 测试
+console.log(aa(1)(2)(3, 4)); // 6 ✅
+console.log(aa(1)(2)(3, 4).toString()); // "10" ✅
+console.log('' + aa(1)(2)(3, 4)); // "10" ✅
+console.log(`${aa(1)(2)(3, 4)}`); // "10" ✅
+aa(1)(2)(3) + 10; // 16 ✅
+
 //但代码量极其少而精，重点技术在于：作用域、交替、匿名函数、toString的巧妙。
 // 执行temp(5)，这个函数内执行add(m+n)，n是此次传进来的数值5，m值还是上一步中的7，
 // 所以add(m+n)=add(7+5)=add(12)，此时m=12，并且返回temp函数
@@ -521,35 +705,33 @@ function composeRedux(...fns) {
 // composeRedux(f,g,m)(x) === f(g(m(x)))
 
 //Koa的compose实现 - 中间件洋葱模型
-function composeKoa(middlewares) {
-  return function (ctx, next) {
+function compose(middleware) {
+  return (ctx, next) => {
     let index = -1;
-    return dispatch(0);
-    function dispatch(i) {
+    const dispatch = (i) => {
+      if (i <= index) throw new Error('重复调用 next');
       index = i;
-      let fn = middlewares[i];
-      if (i === middlewares.length) fn = next;
+      const fn = middleware[i] || next;
       if (!fn) return Promise.resolve();
-      try {
-        return Promise.resolve(fn(ctx, dispatch.bind(null, i + 1)));
-      } catch (error) {
-        return Promise.reject(error);
-      }
-    }
+      return Promise.resolve(fn(ctx, () => dispatch(i + 1)));
+    };
+    return dispatch(0);
   };
 }
 
-//判断一个元素是否在可视区域内 (通过getBoundingClientRect)
-function isInViewport(element) {
-  const rect = element.getBoundingClientRect();
-  return (
-    rect.top >= 0 &&
-    rect.left >= 0 &&
-    rect.bottom <=
-      (window.innerHeight || document.documentElement.clientHeight) &&
-    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-  );
-}
+const aa = (middlewares) => {
+  return (ctx, next) => {
+    let index = -1;
+    const dispatch = (i) => {
+      if (i <= index) return;
+      index = i;
+      const fn = middlewares[i] || next;
+      if (!fn) return Promise.resolve();
+      return Promise.resolve(fn(ctx, () => dispatch(i + 1)));
+    };
+    dispatch(0);
+  };
+};
 
 //数字转换为千分位的方法
 //方法一（正则）?=n 匹配任何其后紧接指定字符串 n 的字符串。
@@ -604,72 +786,59 @@ function aa(num1, num2) {
 
 //实现LRU缓存
 //利用map的性质进行存储
-/**
- * @param {number} capacity
- */
-var LRUCache = function (capacity) {
-  this.map = new Map();
-  this.capacity = capacity;
-};
 
-/**
- * @param {number} key
- * @return {number}
- */
-LRUCache.prototype.get = function (key) {
-  if (this.map.has(key)) {
-    let temp;
-    temp = this.map.get(key);
+class LRUCache {
+  constructor(capacity) {
+    this.capacity = capacity; // 缓存容量
+    this.map = new Map(); // Map 存储键值对，有序
+  }
+
+  // 获取值
+  get(key) {
+    // 不存在返回 -1
+    if (!this.map.has(key)) return -1;
+
+    // 存在：先删除再重新插入 → 放到最新位置
+    const val = this.map.get(key);
     this.map.delete(key);
-    this.map.set(key, temp);
-    return temp;
-  }
-  return -1;
-};
+    this.map.set(key, val);
 
-/**
- * @param {number} key
- * @param {number} value
- * @return {void}
- */
-LRUCache.prototype.put = function (key, value) {
-  //put的时候都是需要set的，如果有值先把key删了，
-  //set之后判断是不是超出size了，超出了就删除第一个值
-  if (this.map.has(key)) {
-    this.map.delete(key);
+    return val;
   }
-  this.map.set(key, value);
-  if (this.map.size > this.capacity) {
-    this.map.delete(this.map.keys().next().value);
-  }
-};
 
-//实现虚拟dom到真实dom的转变
-
-class Element {
-  constructor(tagName, props, children) {
-    (this.tagName = tagName), (this.props = props);
-    this.children = children;
-  }
-  render() {
-    let el = document.createElement(this.tagName);
-    let props = this.props;
-    for (let propsName of props) {
-      el.setAttribute(propsName, props[propsName]);
+  // 存入值
+  put(key, value) {
+    // 已存在：先删除
+    if (this.map.has(key)) {
+      this.map.delete(key);
     }
-    let children = this.children || [];
-    children.forEach((item) => {
-      let childEl;
-      if (item instanceof Element) {
-        childEl = this.render(item);
-      } else {
-        childEl = document.createTextNode(item);
-      }
-      el.appendChild(childEl);
-    });
-    return el;
+
+    // 超出容量：删除最久未使用的（Map 第一个 key）
+    if (this.map.size >= this.capacity) {
+      const oldestKey = this.map.keys().next().value;
+      this.map.delete(oldestKey);
+    }
+
+    // 插入最新数据
+    this.map.set(key, value);
   }
 }
+
+//实现虚拟dom到真实dom的转变
+const vdomToDom = (vdom) => {
+  if (typeof vdom === 'string' || typeof vdom === 'number') {
+    return document.createTextNode(vdom);
+  }
+  const { tag, props, children } = vdom;
+  const el = document.createElement(tag);
+  for (let attr in props) {
+    el.setAttribute(attr, props[attr]);
+  }
+  children.forEach((child) => {
+    el.appendChild(vdomToDom(child));
+  });
+  return el;
+};
 
 //实现一个task类，new Task('test').firstSleep(3).sleep(5).eat('dinner')
 //todo
@@ -716,50 +885,61 @@ class Task {
 }
 
 //手写reduce
-Array.prototype.reduce = function (callback, initialVal) {
+Array.prototype.reduce = function (fn, initialVal) {
   let acc = initialVal || this[0];
   let startIndex = initialVal ? 0 : 1;
   for (let i = startIndex; i < this.length; i++) {
-    res = callback(acc, this[i], i, this);
+    acc = fn(acc, this[i], i, this);
   }
-  return res;
+  return acc;
 };
 
 //实现一个async函数
 /* 
 generatorFunc:是一个生成器函数
  */
+
 function asyncToGenerator(generatorFunc) {
-  //调用生成器函数，产生一个迭代器
-  const gen = generatorFunc.apply(this, arguments);
-  return new Promise((resolve, reject) => {
-    function step(key, val) {
-      //执行迭代器，获取结果
-      const genRes = gen[key](val);
-      const { value, done } = genRes;
-      if (done) {
-        return resolve(value);
-      } else {
-        return Promise.resolve(value).then((val) => step('next', val));
+  return new Promise((res, rej) => {
+    const gen = generatorFunc();
+    const next = (data) => {
+      let result;
+      try {
+        result = gen.next(data);
+      } catch (err) {
+        rej(err); //generator报错，直接抛外边
       }
-    }
-    step('next');
+      const { value, done } = result; // value大概率是promise
+      if (done) {
+        res(value);
+      } else {
+        Promise.resolve(value).then(
+          // 所以需要等待value执行完再执行下一个next，并把data传下去
+          (data) => next(data),
+          (err) => rej(err)
+        );
+      }
+    };
+    next();
   });
 }
 
 //实现一个数据绑定
-const newObj = new Proxy(
-  {},
-  {
-    get(target, key, receiver) {
-      return Reflect.get(target, key, receiver);
-    },
-    set(target, key, value, receiver) {
-      /* 处理设置值的逻辑 */
-      return Reflect.set(target, key, value, receiver);
-    },
-  }
-);
+const newObj = new Proxy(data, {
+  get(target, key) {
+    return target[key];
+  },
+  set(target, key, value) {
+    /* 处理设置值的逻辑 */
+    if (target[key] === value) {
+      return true;
+    }
+    target[key] = value;
+    // 处理数据更新
+    update();
+    return true;
+  },
+});
 
 /**
  * 每个csv文件转成一个person对象，然后根据父子关系构建树
@@ -807,47 +987,129 @@ const transferTree = () => {
   return change(csv);
 };
 
-//用settimeout实现setinterval
-function test(fn, delay) {
-  fn.call(null, arguments);
-  setTimeout(() => {
-    test(fn, delay);
-  }, delay);
+//完成一个treeNode()方法，将多个完整的文件路径生成特性的树形结构。其中，最底层成为叶子节点，以Leaves作为保留字段。
+//如下所示: const pathArr = ['a/b/c','a/d','e/f']; const pathArr2 = ['a/b/c','a/b/d','e/f'];
+function treeNode(pathArr) {
+  // 根节点对象
+  const root = {};
+  // 遍历每一个路径
+  for (const path of pathArr) {
+    // 按 / 分割路径，得到层级数组
+    const parts = path.split('/');
+    // 最后一个元素是叶子节点
+    const leaf = parts.pop();
+    // 从根节点开始，逐层构建
+    let current = root;
+    // 遍历中间层级，创建嵌套对象
+    for (const part of parts) {
+      // 如果当前层级不存在，初始化为空对象
+      if (!current[part]) {
+        current[part] = {};
+      }
+      // 进入下一层级
+      current = current[part];
+    }
+    // 处理叶子节点：初始化 leaves 数组并添加
+    if (!current.leaves) {
+      current.leaves = [];
+    }
+    current.leaves.push(leaf);
+  }
+
+  return root;
 }
 
-function createInterval() {
-  let timerId;
-  return function mySetInterval(cb, delay) {
-    const fn = () => {
-      cb();
-      timerId = setTimeout(fn, delay);
-    };
-    timerId = setTimeout(fn, delay);
-    return timerId;
+// 为什么setinterval不准
+// 1.JS 是单线程，setInterval的回调会被其他任务阻塞，导致实际执行时间晚于预期；
+// 2. 每次回调执行时间 + 宏任务队列等待时间会累积误差：
+
+//用settimeout实现setinterval
+function myInterval(fn, delay) {
+  let stop = false;
+  const bb = () => {
+    if (stop) return;
+    fn();
+    //计算当前时间相对于delay间隔过去了多久，比如过去了3ms，那时间执行时间就是delay - 3ms
+    const offset = Date.now() % delay;
+    console.log(offset);
+    setTimeout(bb, delay - offset);
+  };
+  //立即执行一次
+  bb();
+  return () => {
+    stop = true;
   };
 }
 
-//对象扁平化
-function objFlat(entryObj) {
-  const res = {};
-  function _objFlat(obj, pre = '', isArray = false) {
-    for ([k, v] of Object.entries(obj)) {
-      if (v !== undefined && v !== null) {
-        if (Array.isArray(v)) {
-          //注意别直接去改pre，因为是递归，会有闭包问题
-          const temp = isArray ? pre + `[${k}]` : pre + k;
-          _objFlat(v, temp, true);
-        } else if (typeof v === 'object') {
-          const temp = isArray ? pre + `[${k}].` : pre + k + '.';
-          _objFlat(v, temp);
-        } else {
-          const temp = isArray ? pre + `[${k}]` : pre + k;
-          res[temp] = v;
-        }
+// 倒计时hook， 用setTimeout递归
+const useCountDown = (initialCount) => {
+  const [count, setCount] = useState(initialCount);
+  // 结束时间
+  const endTimeRef = useRef(null);
+  // 定时器
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    // 结束的时间戳
+    endTimeRef.current = Date.now() + initialCount * 1000;
+    const tick = () => {
+      //计算剩余时间
+      const remaining = Math.round((endTimeRef.current - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setCount(0);
+      } else {
+        setCount(remaining);
       }
+      // settimeout对齐整秒
+      const delay = 1000 - (Date.now() % 1000);
+      timerRef.current = setTimeout(tick, delay);
+    };
+    tick(); // 立即执行一次
+
+    return () => clearTimeout(timerRef.current);
+  }, [initialCount]);
+
+  return count;
+};
+
+//对象扁平化
+function objFlat(entryObj, prefix = '', separator = '.') {
+  const res = {};
+  for (let [k, v] of Object.entries(entryObj)) {
+    let pre = prefix ? `${prefix}${separator}${k}` : k;
+    if (Array.isArray(v)) {
+      v.forEach((item, index) => {
+        // 如果是对象继续递归
+        if (typeof item === 'object' && item !== null) {
+          Object.assign(res, objFlat(item, `${pre}.${index}`, separator));
+        } else {
+          res[`${pre}.${index}`] = item;
+        }
+      });
+    } else if (typeof v === 'object' && v !== null) {
+      Object.assign(res, objFlat(v, `${pre}`, separator));
+    } else {
+      res[pre] = v;
     }
   }
-  _objFlat(entryObj);
+  return res;
+}
+
+//对象反向扁平化
+function unflattenObject(obj, separator = '.') {
+  const res = {};
+  for (const [k, v] of Object.entries(obj)) {
+    const keys = k.split(separator);
+    let current = res;
+    for (let i = 0; i < keys.length - 1; i++) {
+      // 如果后一个是数字，则说明是数组
+      const isArray = /\d+$/.test(keys[i + 1]);
+      current[keys[i]] = current[keys[i]] || (isArray ? [] : {});
+      current = current[keys[i]];
+    }
+    // 最后一个层了，直接赋值
+    current[keys[keys.length - 1]] = v;
+  }
   return res;
 }
 
@@ -867,23 +1129,22 @@ function objFlat(entryObj) {
 //   { id: 11, parentId: 5, name: '蟒蛇' },
 //   { id: 12, parentId: 5, name: '麻雀' }
 // ]
+
 const transferArrToTree = (data) => {
-  let res;
-  const map = {}; //将数组中每项根据id组合起来,方便找每一项的爸爸
+  const res = {};
   for (const item of data) {
-    map[item.id] = item;
+    // 数组转树一般就是把数组放到一个对象里边，然后遍历对象将子元素塞进children中
+    res[item.id] = item;
   }
-  console.log('map', map);
-  for (const item of Object.values(map)) {
-    const parent = map[item.parentId];
-    if (parent) {
-      //如果这项有爸爸，那么将其放入爸爸的子元素中
-      (parent.children || (parent.children = [])).push(item);
-    } else {
-      res = item;
+  for (const val of Object.values(res)) {
+    if (val.parentId !== null) {
+      res[val.parentId].children
+        ? res[val.parentId].children.push(val)
+        : (res[val.parentId].children = [val]);
     }
   }
-  return res;
+  //塞完的数组，只需要取其中没有parent的那个value就好，那个就是已经转好的树
+  return Object.values(res).filter((item) => item.parentId === null);
 };
 
 //树转数组
@@ -962,6 +1223,7 @@ const transferArrToTree = (data) => {
 //     },
 //   ],
 // };
+
 const transferTreeToArr = (node) => {
   //广度优先遍历(有个数组能把每层数据存起来)
   const res = [];
@@ -980,6 +1242,18 @@ const transferTreeToArr = (node) => {
     }
   }
   return res;
+};
+
+//实现一个模板字符串, 支持嵌套数据类似'Hello, ${user.name}! Your city is ${user.address.city}.'
+const template = (temp, data) => {
+  return temp.replace(/\$\{([\w.]+)\}/g, (match, path) => {
+    if (path.includes('.')) {
+      // 嵌套path，使用reduce组层取
+      return path.split('.').reduce((pre, cur) => pre[cur], data);
+    } else {
+      return data[path] || match;
+    }
+  });
 };
 
 const transferDfs = (node) => {
@@ -1038,6 +1312,14 @@ const uniqueArray = (arr) => {
 // ============================================
 // 补充常见前端面试手写题
 // ============================================
+
+new Promise((res, rej) => {})
+  .then(() => {})
+  .caths(() => {})
+  .finally(() => {});
+
+Promise.resolve();
+Promise.reject();
 
 // 1. 手写Promise
 class MyPromise {

@@ -149,6 +149,7 @@ var combinationSum = function (candidates, target) {
       //什么时候需要用startIndex控制遍历起始位置呢？
       //每次从集合中选取元素，可选择的范围随着选择的进行而收缩，调整可选择的范围，就是要靠startIndex。
       //一般在一个集合中找组合需要用startIndex,如果多个集合中找组合一般不用
+      // 这个之所以startIndex不用+1，是因为这个target一直在递减，所以每次递归都是在整个集合中找
       path.push(candidates[i]);
       dfs(path, target - candidates[i], i);
       path.pop();
@@ -161,7 +162,6 @@ var combinationSum = function (candidates, target) {
 //6.单词搜索
 /* 给定一个 m x n 二维字符网格 board 和一个字符串单词 word 。如果 word 存在于网格中，返回 true ；否则，返回 false 。
 单词必须按照字母顺序，通过相邻的单元格内的字母构成，其中“相邻”单元格是那些水平相邻或垂直相邻的单元格。同一个单元格内的字母不允许被重复使用。 */
-
 /**
  * @param {character[][]} board
  * @param {string} word
@@ -290,5 +290,41 @@ var solveNQueens = function (n) {
     }
   };
   dfs(0);
+  return res;
+};
+
+//9.复原ip地址
+/**
+ * @param {string} s
+ * @return {string[]}
+ */
+var restoreIpAddresses = function (s) {
+  const res = [];
+  const dfs = (subRes, start) => {
+    //如果已经切出4段，并且用完了字符，加入解集
+    if (subRes.length === 4 && start === s.length) {
+      res.push(subRes.join('.'));
+      return;
+    }
+    //切出4段，但是没有用完字符，直接return，回溯其他可能
+    if (subRes.length === 4 && start < s.length) {
+      return;
+    }
+    //枚举出三种切法，切1/2/3个字符
+    for (let len = 1; len <= 3; len++) {
+      //加上切的长度要超过字符串长度了
+      if (start + len - 1 >= s.length) return;
+      //不能切出‘0x’ '0xx'这样的
+      if (len !== 1 && s[start] === '0') return;
+      //切出的字符串
+      const str = s.substring(start, start + len);
+      //不能超过255
+      if (len === 3 && Number(str) > 255) return;
+      subRes.push(str);
+      dfs(subRes, start + len);
+      subRes.pop();
+    }
+  };
+  dfs([], 0);
   return res;
 };

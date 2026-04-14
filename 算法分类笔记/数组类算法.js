@@ -37,7 +37,7 @@ var longestConsecutive = function (nums) {
   const set = new Set(nums);
   // 遍历元素
   for (let num of nums) {
-    // 如果这个元素没有左邻居，说明可以进行遍历
+    // 如果这个元素没有左邻居，说明可以进行遍历(有左邻居说明不可能是最长连续序列的起点)
     if (!set.has(num - 1)) {
       let len = 1;
       let item = num;
@@ -72,17 +72,16 @@ var maxArea = function (height) {
 };
 //5.删除有序数组中的重复项
 //给你一个 升序排列 的数组 nums ，请你 原地 删除重复出现的元素，使每个元素 只出现一次 ，返回删除后数组的新长度。元素的 相对顺序 应该保持 一致 。
-//思路：创建一个快慢指针，i和j当快慢指针不等时将慢指针加1，将快指针的值赋值给慢指针
 /**
  * @param {number[]} nums
  * @return {number}
  */
 var removeDuplicates = function (nums) {
-  let i = 0;
+  let i = 0; //这个i就是新数组的索引
   for (let j = 1; j < nums.length; j++) {
     if (nums[i] != nums[j]) {
       i++;
-      nums[i] = nums[j];
+      nums[i] = nums[j]; //原地删除的过程，将不重复的元素移动到前面
     }
   }
   return i + 1;
@@ -127,12 +126,11 @@ var subarraySum = function (nums, k) {
 var twoSum = function (nums, target) {
   const map = new Map();
   for (let i = 0; i < nums.length; i++) {
-    var cha = target - nums[i];
+    const cha = target - nums[i];
     if (map.has(cha)) {
       return [map.get(cha), i];
-    } else {
-      map.set(nums[i], i);
     }
+    map.set(nums[i], i);
   }
 };
 //8.三数之和
@@ -263,6 +261,8 @@ var sortColors = function (nums) {
   return nums;
 };
 
+const aa = (nums) => {};
+
 // 13.移动0问题（很经典的双指针问题）
 // 给定一个数组 nums，编写一个函数将所有 0 移动到数组的末尾，同时保持非零元素的相对顺序。
 /**
@@ -270,13 +270,11 @@ var sortColors = function (nums) {
  * @return {void} Do not return anything, modify nums in-place instead.
  */
 var moveZeroes = function (nums) {
-  // 慢指针，用于定位新数组的下标
   let slowIndex = 0;
   for (let i = 0; i < nums.length; i++) {
     if (nums[i] !== 0) {
-      //找到非0元素，将非0元素和新数组下标交换
-      [nums[i], nums[slowIndex]] = [nums[slowIndex], nums[i]];
-      //新数组下标++，循环下去，新数组就是非0元素在前边，0在最后
+      //如果是把0全部移到前边就是===0的时候交换
+      [nums[slowIndex], nums[i]] = [nums[i], nums[slowIndex]];
       slowIndex++;
     }
   }
@@ -325,8 +323,8 @@ var topKFrequent = function (nums, k) {
 var findAnagrams = function (s, p) {
   const plen = p.length;
   const res = [];
-  const need = {};
-  const window = {};
+  const need = {}; // 统计p中字符的频次
+  const window = {}; // 统计窗口中字符的频次
   let flag = 0; //标志窗口中频次和need中频次一样的字符数量
   let len = 0; //p中字母种类
   //统计p中字符的频次
@@ -442,17 +440,46 @@ var firstMissingPositive = function (nums) {
  * @return {void} Do not return anything, modify nums1 in-place instead.
  */
 var merge = function (nums1, m, nums2, n) {
-  let len1 = m - 1,
-    len2 = n - 1,
-    len = m + n - 1;
-  //将nums2填入nums1，所以是len2>=0，如果nums2都填完了，那原来nums1的目标位置就是所处的位置
-  while (len2 >= 0) {
-    //如果len1<0,说明num1的位置都移动完了，将nums2填入nums1即可
-    if (len1 >= 0 && nums1[len1] > nums2[len2]) {
-      nums1[len--] = nums1[len1--];
+  //从后往前遍历，取num1和nums2中较大的数放入nums1的尾部
+  let p1 = m - 1;
+  let p2 = n - 1;
+  let tail = m + n - 1;
+  let cur;
+  while (p1 >= 0 || p2 >= 0) {
+    if (p1 === -1) {
+      cur = nums2[p2--];
+    } else if (p2 === -1) {
+      cur = nums1[p1--];
+    } else if (nums1[p1] > nums2[p2]) {
+      cur = nums1[p1--];
     } else {
-      nums1[len--] = nums2[len2--];
+      cur = nums2[p2--];
+    }
+    nums1[tail--] = cur;
+  }
+};
+
+//20.长度最小子数组
+/* 给定一个含有 n 个正整数的数组和一个正整数 target 。
+找出该数组中满足其和 ≥ target 的长度最小的 连续子数组 [numsl, numsl+1, ..., numsr-1, numsr] ，并返回其长度。如果不存在符合条件的子数组，返回 0 。 */
+/**
+ * @param {number} target
+ * @param {number[]} nums
+ * @return {number}
+ */
+var minSubArrayLen = function (target, nums) {
+  //双指针法，找到满足条件的子集后，移动left缩小距离
+  let left = 0,
+    sum = 0;
+  let minLen = nums.length + 1;
+  for (let right = 0; right < nums.length; right++) {
+    sum += nums[right];
+    //满足条件后，缩小范围找最小解
+    while (sum >= target && left <= right) {
+      minLen = Math.min(minLen, right - left + 1);
+      sum -= nums[left];
+      left++;
     }
   }
-  return nums1;
+  return minLen === nums.length + 1 ? 0 : minLen;
 };

@@ -156,7 +156,7 @@ var groupAnagrams = function (strs) {
   return Array.from(map.values());
 };
 
-//8.最小覆盖子串
+//8.最小覆盖子串（hard）
 /* 给你一个字符串 s 、一个字符串 t 。返回 s 中涵盖 t 所有字符的最小子串。如果 s 中不存在涵盖 t 所有字符的子串，则返回空字符串 "" 。 */
 /**
  * @param {string} s
@@ -206,4 +206,45 @@ var minWindow = function (s, t) {
   }
   if (start === s.length) return '';
   return s.slice(start, start + minLen);
+};
+
+//9.翻转字符串
+/**
+ * @param {character[]} s
+ * @return {void} Do not return anything, modify s in-place instead.
+ */
+var reverseString = function (s) {
+  const arr = s.split('');
+  //双指针法
+  let l = 0,
+    r = arr.length - 1;
+  while (l <= r) {
+    [arr[l], arr[r]] = [arr[r], arr[l]];
+    l++;
+    r--;
+  }
+  return arr.join('');
+};
+
+//10.比较版本号
+var compareVersion = function (version1, version2) {
+  const v1 = version1.split('.');
+  const v2 = version2.split('.');
+  let index = 0;
+  while (index < v1.length || index < v2.length) {
+    if (!v1[index]) {
+      v1[index] = 0;
+    }
+    if (!v2[index]) {
+      v2[index] = 0;
+    }
+    if (Number(v1[index]) < Number(v2[index])) {
+      return -1;
+    } else if (Number(v1[index]) > Number(v2[index])) {
+      return 1;
+    } else {
+      index++;
+    }
+  }
+  return 0;
 };

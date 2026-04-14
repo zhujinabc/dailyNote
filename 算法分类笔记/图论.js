@@ -251,3 +251,26 @@ Trie.prototype.startsWith = function (prefix) {
   }
   return true;
 };
+
+//6.小镇法官
+/**
+ * @param {number} n
+ * @param {number[][]} trust
+ * @return {number}
+ */
+var findJudge = function (n, trust) {
+  const inDegree = new Array(n + 1).fill(0); // 入度数组，所谓入度就是图中指向这个节点的个数
+  const outDegree = new Array(n + 1).fill(0); // 出度数组，出度是指图中这个节点指出去的个数
+  for (const item of trust) {
+    const [a, b] = item;
+    inDegree[b]++;
+    outDegree[a]++;
+  }
+  for (let i = 1; i <= n; i++) {
+    //法官不出度任何人，并且所有人入度法官，所以法官的入度是n-1
+    if (inDegree[i] === n - 1 && outDegree[i] === 0) {
+      return i;
+    }
+  }
+  return -1;
+};

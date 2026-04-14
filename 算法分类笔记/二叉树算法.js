@@ -275,6 +275,7 @@ var deleteNode = function (root, key) {
  * @param {number} val
  * @return {TreeNode}
  */
+
 var insertIntoBST = function (root, val) {
   if (root == null) {
     //只需要遍历当前bst树，找到为空的节点，把值插入就好了
@@ -477,26 +478,23 @@ var flatten = function (root) {
   //那么我们可以发现，对左右子树的处理不太一样
   //右子树：我们只需要获取头节点将其接到左子树的尾节点上
   //左子树：我们既需要获取头节点也需要获取尾节点供右子树链表接，尾节点可以通过一直获取右节点找到
-  const helper = (root) => {
-    if (root === null) return;
-    //生成右子树单链表
-    if (root.right) {
-      helper(root.right);
-    }
-    if (root.left) {
-      const leftFirst = helper(root.left); //生成左子树单链表，并获取头节点
-      let leftEnd = leftFirst;
-      while (leftEnd.right) {
-        //一直找右节点，找到单链表的尾节点
-        leftEnd = leftEnd.right;
-      }
-      leftEnd.right = root.right; //尾节点接右子树展平后的链表
-      root.right = leftFirst; //根节点right接左子树展平的链表
-      root.left = null; //根节点的left要置为null
-    }
-    return root;
-  };
-  return helper(root);
+  if (root == null) return;
+  //递归展开左子树
+  flatten(root.left);
+  //递归展开右子树
+  flatten(root.right);
+  //经过上面递归已经把左右子树拉平了，只需要把左子树挂到右节点，右子树挂到左子树的最右节点即可
+  //把原来的右子树存一个临时值
+  const temp = root.right;
+  // 把root的右子树置为展开的左子树
+  root.right = root.left;
+  root.left = null;
+  //新的右子树，通过cur找到新右子树的最右节点，把原来的右子树挂上去就好
+  let cur = root;
+  while (cur.right) {
+    cur = cur.right;
+  }
+  cur.right = temp;
 };
 
 //16.二叉树的最大路径和（hard）
@@ -546,6 +544,7 @@ var convertBST = function (root) {
  * @param {TreeNode} root
  * @return {number}
  */
+
 var diameterOfBinaryTree = function (root) {
   let max = 0;
   const dfs = (node) => {
@@ -649,4 +648,28 @@ var rightSideView = function (root) {
     res.push(rootArr[i].pop());
   }
   return res;
+};
+
+//23.完全二叉树的节点个数
+/**
+ * @param {TreeNode} root
+ * @return {number}
+ */
+var countNodes = function (root) {
+  let hl = 0,
+    hr = 0; //左右子树的高度
+  let l = (r = root);
+  while (l !== null) {
+    l = l.left;
+    hl++;
+  }
+  while (r !== null) {
+    r = r.right;
+    hr++;
+  }
+  if (hr === hl) {
+    //如果左子树高度和右子树高度一致，说明是完美二叉树， 节点数是2^n - 1
+    return Math.pow(2, hr) - 1;
+  }
+  return 1 + countNodes(root.left) + countNodes(root.right); // 这个起始就是普通前序遍历
 };
